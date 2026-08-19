@@ -74,14 +74,66 @@ const sentences = html => String(html)
   .replace(/<br>/g, '。').replace(/<[^>]+>/g, '')
   .split(/[。！\n]/).filter(s => s.trim());
 
+// 「隊伍中自己的目前場上角色」指的是隊友，把這種寫法正規化掉，避免被當成「自身」
+const norm = s => s
+  // 「（不包括砂糖自己）」這種排除註記要先拿掉，否則會被誤判成受益者是自己
+  .replace(/[（(][^）)]*(不包括|不含|除外)[^）)]*[）)]/g, '')
+  .replace(/除(裝備者|自身|自己)以外[，、]?/g, '')
+  .replace(/隊伍中自己的/g, '隊伍中的')
+  .replace(/自己的目前場上角色/g, '目前場上角色')
+  .replace(/自己的角色/g, '隊伍中的角色');
+
+// 團隊向判定：效果前面要先出現隊友範圍字樣，而且效果的「受益者」不能是角色自己
+// （例：阿羅夏 C1「隊伍中附近的角色觸發雷元素相關反應後，將為阿羅夏恢復15點元素能量」
+//   句子雖然有「隊伍中」，但回能的是他自己，不算團隊支援）
+// 效果的「受益者」是不是角色自己
+// 只看最近一個逗號之後那一小段：「基於雲堇的防禦力，提高造成的傷害」換算來源是自己、
+// 受益者是隊友，不算自身向；「將為阿羅夏恢復15點元素能量」才是自身向
+function selfTargeted(s, name, idx) {
+  const tail = s.slice(Math.max(0, idx - 16), idx).split(/[，、；：]/).pop();
+  return new RegExp('(自身|自己|' + name + ')').test(tail);
+}
+
+// 逐句標出「這句在不在隊友範圍內」。
+// 除了句子自己出現隊友字樣，還處理遊戲文本常見的區塊寫法：
+//   「…為附近的隊伍中所有角色賦予『飛雲旗陣』。」 → 之後單獨一行的「飛雲旗陣」是區塊標題，
+//   該區塊底下的敘述都算作用在隊友身上（雲堇 Q 就是這個格式）。
+function teamScopes(talentText) {
+  const segs = sentences(talentText).map(norm);
+  const teamBuffs = new Set();
+  segs.forEach(s => {
+    if (!TEAM.test(s)) return;
+    (s.match(/[「『]([^」』]{2,12})[」』]/g) || []).forEach(x => teamBuffs.add(x.replace(/[「『」』]/g, '')));
+  });
+  let inBlock = false;
+  return segs.map(s => {
+    const bare = s.replace(/[「『」』·・]/g, '').trim();
+    if (bare.length <= 12 && !/[，。]/.test(s)) inBlock = teamBuffs.has(bare);
+    return { s, team: TEAM.test(s) || inBlock };
+  });
+}
+
+function teamBenefit(talentText, name, re) {
+  return teamScopes(talentText).some(({ s, team }) => {
+    if (!team) return false;
+    const g = new RegExp(re.source, 'g');
+    let m;
+    while ((m = g.exec(s)) !== null) {
+      if (!selfTargeted(s, name, m.index)) return true;
+      if (g.lastIndex === m.index) g.lastIndex++;
+    }
+    return false;
+  });
+}
+
 function tagSkills(src, name) {
   const out = {};
   for (const [label, htmlList] of src) {
-    const segs = htmlList.flatMap(sentences);
     for (const [tag, re, needTeam, needAlso] of RULES) {
-      if (segs.some(s => re.test(s) && (!needTeam || TEAM.test(s)) && (!needAlso || needAlso(s, name)))) {
-        (out[tag] = out[tag] || []).push(label);
-      }
+      const hit = needTeam
+        ? htmlList.some(html => teamBenefit(html, name, re))
+        : htmlList.flatMap(sentences).some(s => re.test(s) && (!needAlso || needAlso(s, name)));
+      if (hit) (out[tag] = out[tag] || []).push(label);
     }
   }
   return out;
@@ -133,6 +185,18 @@ const out = items.map(c => {
 
   const mats = MATS[c.id] || { 突破: [], 天賦: [] };
 
+  // 特殊戰鬥體系：只留需要專門配隊的機制（月曜／星系反應、夜魂），
+  // 蒸發融化凍結這類一般反應幾乎人人可打，當篩選條件沒有鑑別度，不列入
+  // 判定方式：角色的技能或命座原文只要提到該反應，就算跟這個體系有關係
+  // （不管是自己打出、把一般反應轉成它、增幅它，還是把它列進觸發條件——都代表配得上）。
+  // 蒸發融化凍結那種一般反應不列入，當篩選沒有鑑別度。
+  const SPECIAL = ['月綻放', '月感電', '月結晶', '星爍', '星擴散', '星超導'];
+  const 全文 = [...天賦, ...命座].map(t => t.說明.replace(/<[^>]+>/g, '')).join(' ');
+  const 特殊體系 = [
+    ...SPECIAL.filter(x => 全文.includes(x)),
+    ...((r && r[1] || []).includes('夜魂') ? ['夜魂'] : []),
+  ];
+
   // Lv90 基礎面板 + 有效詞條 + 畢業目標（詳見 tools/build-stats.js）
   const 基礎面板 = detail ? baseStats(detail) : null;
   const meta = {
@@ -150,9 +214,9 @@ const out = items.map(c => {
         冠: ref.主詞條.理之冠.split(/\s*or\s*/), 副詞條: ref.副詞條,
       }
     : (panel ? {
-        來源: '規則推導',
+        來源: (b && b.src) || '規則推導',
         沙: panel.有效詞條.沙, 杯: panel.有效詞條.杯, 冠: panel.有效詞條.冠,
-        副詞條: panel.有效詞條.副詞條.join(' > '),
+        副詞條: (b && b.sub) || panel.有效詞條.副詞條.join(' > '),
       } : null);
 
   return {
@@ -176,6 +240,7 @@ const out = items.map(c => {
     上線日: new Date(c.release * 1000).toISOString().slice(0, 10),
     是旅行者: isTraveler || c.region === 'MAINACTOR',
     反應體系: b ? (b.r || []) : [],
+    特殊體系,
     聖遺物: ref ? ref.聖遺物 : (b ? (b.a || []) : []),
     武器推薦: b ? (b.w || []) : [],
     關鍵命座: b ? (b.k || []) : [],
@@ -191,9 +256,10 @@ const out = items.map(c => {
         : (基礎面板.突破加成值 * 100).toFixed(1) + '%',
     } : null,
     成長屬性: panel ? panel.成長屬性 : '—',
+    反應輸出: !!(panel && panel.反應輸出),
     參考定位: ref ? ref.定位 : '',
-    天賦優先: ref ? ref.天賦優先 : '',
-    參考面板: ref ? ref.參考面板 : '',
+    天賦優先: ref ? ref.天賦優先 : ((b && b.t) || ''),
+    參考面板: ref ? ref.參考面板 : ((b && b.p) || ''),
     詞條來源: 詞條 ? 詞條.來源 : '',
     有效詞條: 詞條,
     畢業目標: panel ? panel.畢業目標 : [],

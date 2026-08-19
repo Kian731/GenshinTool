@@ -46,10 +46,11 @@ input[type=search]{min-width:180px}
   padding:4px 12px;font-size:12.5px;cursor:pointer;user-select:none;transition:.12s;
   font-family:inherit;display:inline-flex;align-items:center;gap:5px}
 .chip:hover{color:var(--txt);background:#252838}
-.chip.on{background:var(--gold);color:#17181f !important;border-color:#f5dc9a;font-weight:700;
-  box-shadow:0 0 0 2px rgba(232,197,106,.25)}
+/* 選中＝白底黑字反白，一眼看得出來 */
+.chip.on{background:#fff;color:#15161d !important;border-color:#fff;font-weight:700;
+  box-shadow:0 0 0 2px rgba(255,255,255,.28)}
 .chip img{width:15px;height:15px;filter:brightness(0) invert(1);opacity:.85}
-.chip.on img{filter:brightness(0);opacity:.9}
+.chip.on img{filter:brightness(0);opacity:1}
 .hint{color:#6f7488;font-size:11.5px;padding:2px 0 0 58px;line-height:1.6}
 main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
 .count{color:var(--dim);font-size:12.5px;margin:4px 0 12px}
@@ -325,9 +326,7 @@ const EL_ICON = { 風:'Wind', 岩:'Rock', 雷:'Electric', 草:'Grass', 水:'Wate
 const ROLE_ORDER = ['主C','副C','輔助','治療','護盾'];
 const FN_ORDER = ['團隊增傷','減抗','減防','攻擊力加成','暴擊加成','精通加成','生命值加成','防禦力加成',
                   '充能支援','治療','護盾','元素附魔','聚怪','減傷','抗打斷'];
-const RE_ORDER = ['蒸發','融化','凍結','碎冰','超導','感電','超載','擴散','結晶','燃燒',
-                  '原激化','超激化','蔓激化','綻放','超綻放','烈綻放',
-                  '月綻放','月感電','月結晶','星爍','星擴散','星超導','特殊'];
+const RE_ORDER = ['月綻放','月感電','月結晶','星爍','星擴散','星超導','夜魂'];
 const WTYPE_ORDER = ['單手劍','雙手劍','長柄武器','弓','法器'];
 const uniq = a => [...new Set(a)];
 const sortBy = o => (a, b) => { const i = o.indexOf(a), j = o.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); };
@@ -346,7 +345,7 @@ const VIEWS = {
       { label:'武器', key:'武器', mode:'val', vals:WTYPE_ORDER },
       { label:'星級', key:'星級', mode:'val', vals:[5,4] },
       { label:'定位', key:'定位', mode:'val', vals:uniq(D.map(c => c.定位)).sort(sortBy(ROLE_ORDER)) },
-      { label:'反應體系', key:'反應體系', mode:'arr', vals:uniq(D.flatMap(c => c.反應體系)).sort(sortBy(RE_ORDER)) },
+      { label:'特殊體系', key:'特殊體系', mode:'arr', vals:uniq(D.flatMap(c => c.特殊體系)).sort(sortBy(RE_ORDER)) },
       { label:'技能功能', key:'功能', mode:'fn', vals:uniq(D.flatMap(c => Object.keys(c.功能))).sort(sortBy(FN_ORDER)) },
       { label:'成長屬性', key:'成長屬性', mode:'val', vals:['攻擊力','生命值','防禦力','元素精通'] },
       { label:'性別', key:'性別', mode:'val', vals:['男','女'] },
@@ -355,7 +354,7 @@ const VIEWS = {
       { label:'地區', key:'地區', mode:'val', vals:uniq(D.map(c => c.地區)) },
     ],
     search: c => [c.名稱, c.原名, c.標籤.join(''), c.特色, c.元素EN, c.地區, c.定位,
-                  c.反應體系.join(''), c.聖遺物.join(''), c.武器推薦.join(''), Object.keys(c.功能).join('')].join(''),
+                  c.特殊體系.join(''), c.聖遺物.join(''), c.武器推薦.join(''), Object.keys(c.功能).join('')].join(''),
     cmp: {
       new: (a,b) => b.上線日.localeCompare(a.上線日),
       old: (a,b) => a.上線日.localeCompare(b.上線日),
@@ -540,8 +539,9 @@ function tabInfo(c) {
     '<dt>年齡層</dt><dd>' + c.年齡層 + '</dd><dt>所屬</dt><dd>' + c.地區 + '</dd>' +
     '<dt>突破加成</dt><dd>' + c.突破加成 + (c.基礎面板 ? ' ' + c.基礎面板.突破加成值 : '') + '</dd>' +
     '<dt>生日</dt><dd>' + c.生日 + '</dd><dt>上線日</dt><dd>' + c.上線日 + '</dd></dl>' +
-    (c.反應體系.length ? '<div class="sec" style="margin-top:18px"><h3>反應體系</h3><div class="tags" style="margin:0">' +
-      c.反應體系.map(r => '<span class="tag re">' + r + '</span>').join('') + '</div></div>' : '') +
+    (c.特殊體系.length ? '<div class="sec" style="margin-top:18px"><h3>特殊戰鬥體系</h3><div class="tags" style="margin:0">' +
+      c.特殊體系.map(r => '<span class="tag re">' + r + '</span>').join('') +
+      '</div><div class="hint" style="padding:6px 0 0">依角色的技能與命座原文有沒有提到該反應來判定，有提到就代表配得上這個體系。蒸發融化凍結這類一般反應人人可打，不另外標。</div></div>' : '') +
     (fn ? '<div class="sec"><h3>技能功能</h3><div class="tags" style="margin:0">' + fn + '</div></div>' : '') +
     (c.標籤.length ? '<div class="sec"><h3>機制標籤</h3><div class="tags" style="margin:0">' +
       c.標籤.map(t => '<span class="tag">' + t + '</span>').join('') + '</div></div>' : '');
@@ -576,7 +576,7 @@ function statBlock(c) {
     '<dt>理之冠</dt><dd class="subq">' + q(s.冠) + '</dd>' +
     '<dt>副詞條</dt><dd class="subq"><span style="background:#2b2f3f;font-weight:600">' + s.副詞條 + '</span></dd>' +
     '</dl><div class="hint" style="padding:8px 0 0">每格左邊為首選，副詞條由左至右為優先度。生之花與死之羽主詞條固定，不用選。' +
-    '（' + (s.來源 === '參考表' ? '來自社群統整表' : '本站依技能文本推導') + '）</div></div>';
+    '（' + ({ '參考表':'來自社群統整表', '網路查證':'查證自攻略站，非本站推斷' }[s.來源] || '本站依技能文本推導') + '）</div></div>';
 }
 const fnBadge = arr => (arr && arr.length)
   ? '<span class="fnb">' + arr.map(f => '<span>' + f + '</span>').join('') + '</span>' : '';
@@ -612,11 +612,10 @@ function tabBuild(c) {
   const keys = c.關鍵命座.length ? '<div class="sec"><h3>關鍵命座</h3>' +
     c.關鍵命座.map(([n, d]) => '<div class="sk key"><div class="skh"><span class="cnum">C' + n + '</span>' +
       '<span class="txt">' + d + '</span></div></div>').join('') + '</div>' : '';
-  const 來源 = c.詞條來源 === '參考表'
-    ? '<div class="hint" style="padding:0 0 12px">聖遺物與詞條來自社群統整表（HoYoLAB「全角色聖遺物套裝、參考面板統整」），武器與關鍵命座為本站整理。</div>'
-    : '';
-  return (c.配裝推測 ? '<div class="warn">⚠ 這名角色 2026 年後才上線，配裝為依技能文本與同期武器／聖遺物推斷，實戰結論可能還會變。</div>' : '') +
-    (c.配裝備註 ? '<div class="warn">' + c.配裝備註 + '</div>' : '') + 來源 +
+  const 來源 = { '參考表':'聖遺物與詞條來自社群統整表（HoYoLAB「全角色聖遺物套裝、參考面板統整」），武器與關鍵命座為本站整理。', '網路查證':'這名角色不在社群統整表內，聖遺物與詞條是另外查攻略站查證過的，武器與關鍵命座為本站整理。', '規則推導':'這名角色沒有可用的統整資料，以下為本站依技能文本推導，準確度較低。' }[c.詞條來源];
+  const 來源HTML = 來源 ? '<div class="hint" style="padding:0 0 12px">' + 來源 + '</div>' : '';
+  return ((c.配裝推測 && c.詞條來源 === '規則推導') ? '<div class="warn">⚠ 這名角色 2026 年後才上線，且沒有可用的統整資料，配裝為依技能文本與同期武器／聖遺物推斷，實戰結論可能還會變。</div>' : '') +
+    (c.配裝備註 ? '<div class="warn">' + c.配裝備註 + '</div>' : '') + 來源HTML +
     (c.天賦優先 ? '<div class="sec"><h3>天賦優先級</h3><div class="goal"><span class="g2" style="margin:0">' + c.天賦優先 + '</span></div></div>' : '') +
     list('推薦聖遺物', c.聖遺物, 'artifact') + statBlock(c) + list('推薦武器', c.武器推薦, 'weapon') + keys +
     (c.參考面板 ? '<div class="sec"><h3>參考面板</h3><div class="goal"><span class="g2" style="margin:0;font-size:15px">' +
