@@ -27,7 +27,7 @@ function promoteCost(promote, items) {
     等級需求: p.requiredPlayerLevel || null,
     摩拉: p.coinCost || 0,
     材料: Object.entries(p.costItems).map(([id, n]) => ({
-      名稱: (items[id] || {}).name || id,
+      id, 名稱: (items[id] || {}).name || id,
       數量: n,
       星級: (items[id] || {}).rank || 1,
       圖標: (items[id] || {}).icon || '',
@@ -109,7 +109,7 @@ for (const f of fs.readdirSync(path.join(ROOT, 'data/_raw/detail'))) {
         等級: '→' + p.level,
         摩拉: p.coinCost || 0,
         材料: Object.entries(p.costItems).map(([id, n]) => ({
-          名稱: (items[id] || {}).name || id, 數量: n,
+          id, 名稱: (items[id] || {}).name || id, 數量: n,
           星級: (items[id] || {}).rank || 1, 圖標: (items[id] || {}).icon || '',
         })),
       });
@@ -136,3 +136,68 @@ console.log('需要下載的圖標 %d 張', iconSet.size);
 console.log('5★武器 %d、4★武器 %d、5★聖遺物 %d 套',
   weapons.filter(w => w.星級 === 5).length, weapons.filter(w => w.星級 === 4).length,
   artifacts.filter(a => a.星級 === 5).length);
+
+// ── 素材總表 + 合成鏈 + 經驗表（給培養計算機用） ─────────
+// 蒐集所有角色與武器檔案裡的 items 對照表，合成一份全域素材表
+const MAT = {};
+const collect = dir => {
+  for (const f of fs.readdirSync(path.join(ROOT, dir))) {
+    const d = R(dir + '/' + f).data;
+    for (const [id, v] of Object.entries(d.items || {})) {
+      if (!MAT[id]) MAT[id] = { id, 名稱: v.name, 星級: v.rank || 1, 圖標: 'images/item/' + v.icon + '.png' };
+    }
+  }
+};
+collect('data/_raw/detail');
+collect('data/_raw/weapon_detail');
+// 素材總表裡的每一種都要有圖（摩拉、經驗書等也算）
+Object.values(MAT).forEach(m => iconSet.add(m.圖標.replace('images/item/', '').replace('.png', '')));
+
+// 合成鏈：遊戲內同一系列的素材 id 連號且星級遞增，3 個低階可合成 1 個高階
+const ids = Object.keys(MAT).map(Number).sort((a, b) => a - b);
+const chains = [];
+const inChain = new Set();
+for (const id of ids) {
+  if (inChain.has(id)) continue;
+  const chain = [id];
+  let cur = id;
+  while (MAT[cur + 1] && MAT[cur + 1].星級 === MAT[cur].星級 + 1) { cur += 1; chain.push(cur); }
+  if (chain.length > 1) { chain.forEach(x => inChain.add(x)); chains.push(chain.map(String)); }
+}
+// 摩拉、經驗書等不參與合成
+const NO_CRAFT = new Set(['202']);
+// 經驗書與精鍛礦不能用合成台合成，排除
+const NO_CRAFT_NAME = /經驗|精鍛用/;
+const craft = chains.filter(ch => !ch.some(id => NO_CRAFT.has(id) || NO_CRAFT_NAME.test(MAT[id].名稱)));
+
+const avatarLevel = R('data/_raw/avatar_level.json');
+const weaponLevel = R('data/_raw/weapon_level.json');
+const EXP = {
+  角色: avatarLevel.sort((a, b) => a.level - b.level).map(x => x.exp),   // index = 等級-1，值 = 升到下一級所需經驗
+  武器: weaponLevel.sort((a, b) => a.level - b.level).map(x => x.requiredExps), // [1★..5★]
+  // 經驗道具（官方固定值）
+  角色經驗書: [
+    { 名稱: '大英雄的經驗', 經驗: 20000 },
+    { 名稱: '冒險家的經驗', 經驗: 5000 },
+    { 名稱: '流浪者的經驗', 經驗: 1000 },
+  ],
+  武器經驗礦: [
+    { 名稱: '精鍛用魔礦', 經驗: 10000 },
+    { 名稱: '精鍛用良礦', 經驗: 2000 },
+    { 名稱: '精鍛用雜礦', 經驗: 400 },
+  ],
+  角色摩拉比: 5,   // 消耗經驗 ÷ 5 = 摩拉
+  武器摩拉比: 10,
+};
+// 補上經驗道具的圖標資訊
+[...EXP.角色經驗書, ...EXP.武器經驗礦].forEach(b => {
+  const m = Object.values(MAT).find(x => x.名稱 === b.名稱);
+  if (m) { b.id = m.id; b.圖標 = m.圖標; b.星級 = m.星級; }
+});
+
+fs.writeFileSync(out('data/materials.js'),
+  'window.MATERIALS = ' + JSON.stringify({ 素材: MAT, 合成鏈: craft, 經驗: EXP }) + ';\n', 'utf8');
+fs.writeFileSync(out('data/materials.json'), JSON.stringify({ 素材: MAT, 合成鏈: craft, 經驗: EXP }, null, 1), 'utf8');
+fs.writeFileSync(out('data/_build/icon-list.txt'), [...iconSet].join('\n') + '\n', 'utf8');
+console.log('素材 %d 種、合成鏈 %d 條 → data/materials.js', Object.keys(MAT).length, craft.length);
+console.log('圖標清單共 %d 張', iconSet.size);

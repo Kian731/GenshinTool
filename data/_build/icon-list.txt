@@ -1047,3 +1047,10 @@ UI_ItemIcon_104368
 UI_ItemIcon_101275
 UI_ItemIcon_113090
 UI_ItemIcon_113088
+UI_ItemIcon_202
+UI_ItemIcon_104001
+UI_ItemIcon_104002
+UI_ItemIcon_104003
+UI_ItemIcon_104011
+UI_ItemIcon_104012
+UI_ItemIcon_104013

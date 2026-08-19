@@ -6,7 +6,8 @@
 
 直接雙擊 **`index.html`** 用瀏覽器開啟即可（不需要架伺服器、不需要連網）。
 
-上方三個分頁：**角色 / 武器 / 聖遺物**，各自有獨立的篩選、搜尋與排序。
+上方四個分頁：**角色 / 武器 / 聖遺物 / 培養計算**。前三個各自有獨立的篩選、搜尋與排序。
+手機上圖鑒一排顯示四個。
 
 ### 角色
 
@@ -36,6 +37,19 @@
 
 63 套。詳情含 2 件／4 件套效果、五個部位的名稱與圖鑒文字，以及「推薦給哪些角色」。
 
+角色頁的推薦聖遺物與武器都帶圖示，**點下去可以看該裝備的完整資料，看完按左上角「← 返回 ○○」回到原本的角色**（可以一路往下點，返回會照原路退回來）。
+
+### 培養計算
+
+多目標的素材計算機，設定會存在瀏覽器裡。
+
+- 選角色加入目標，每個目標可設定**角色等級**（現在 → 目標）、**三個天賦各自的等級**、**武器與武器等級**
+- 預設是「Lv1／天賦 1」練到「Lv90 ↑／天賦 10」，每一欄都能改；等級選單的 `↑` 代表已完成該階突破
+- 右邊列出所有需要的素材，填入目前擁有的數量後會即時算出還缺多少
+- **多個角色需要同一種素材會自動合併計算**
+- **低階素材多出來時會自動用 3→1 合成往上補**（寶石、怪物掉落、天賦書、武器突破素材都吃這個規則），並標示「合成補 N」
+- 角色經驗書與武器精鍛礦由所需經驗換算，摩拉一併算出
+
 ## 三種資料的可信度不一樣
 
 **1. 官方原始資料（可直接信）**
@@ -53,8 +67,16 @@
 
 **4. 人工整理（主觀，歡迎改）**
 定位、機制標籤、反應體系、推薦聖遺物、推薦武器、關鍵命座，集中在 `tools/roles.js` 與 `tools/builds.js`。
-裝備名稱都有拿官方總表驗證過存在且不是武器外觀。
 2026 年後上線的 30 名角色在配裝頁會顯示 ⚠，那些是依技能文本與同期裝備推斷的。
+
+配裝有自動驗證器 `node tools/validate.js`，會檢查：
+
+- 聖遺物／武器名稱是否真的存在，武器是否誤填成武器外觀
+- **武器類型是否與角色相符**（法器角色不能推薦雙手劍）
+- **套裝條件是否成立**：例如樂園遺落之花只算綻放體系、翠綠之影只給風角色、海染硨磲只給有治療的角色、黑曜秘典只給納塔夜魂角色
+- 有無重複項目
+
+條件表寫在 `tools/validate.js` 的 `COND`，改配裝後跑一次就知道有沒有寫錯。
 
 **關於「年齡層」**：用官方**模型體型**分類（成女／成男＝成年體型，蘿莉／少女／少年＝未成年體型），不是實際年齡考據。
 
@@ -66,6 +88,7 @@ data/
   characters.js/.json   角色（含天賦、命座、面板、詞條、素材）
   weapons.js/.json      武器
   artifacts.js/.json    聖遺物
+  materials.js/.json    素材總表（511 種）、合成鏈（121 條）、等級經驗表
   characters.csv        Excel 用（UTF-8 BOM，不含天賦全文）
   _raw*                 所有原始 API 回應與成長曲線，可自行核對
 images/
@@ -78,7 +101,8 @@ tools/
   builds.js             ★ 反應體系／聖遺物／武器／關鍵命座（手動維護）
   build-stats.js        ★ 面板計算假設 ASSUME 與詞條例外 OVERRIDE
   build-data.js         產生角色資料，並自動擷取技能功能標籤
-  build-equip.js        產生武器／聖遺物資料與培養素材
+  build-equip.js        產生武器／聖遺物資料、培養素材與合成鏈
+  validate.js           配裝驗證器（名稱、武器類型、套裝條件）
   fetch-detail.sh       下載角色天賦／命座
   fetch-equip.sh        下載武器／聖遺物明細
   fetch-images.sh       下載角色頭像／立繪
@@ -95,13 +119,13 @@ tools/
 bash tools/update.sh
 ```
 
-接著手動補新角色的 `tools/roles.js` 與 `tools/builds.js`，再跑 `node tools/build-data.js`。
+接著手動補新角色的 `tools/roles.js` 與 `tools/builds.js`，再跑 `node tools/build-data.js` 與 `node tools/validate.js`。
 其餘（天賦、命座、功能標籤、基礎面板、有效詞條、畢業目標、培養素材）都是自動產生的。
 
 ## 資料來源
 
 - 角色 / 天賦 / 命座 / 武器 / 聖遺物 / 素材 / 圖片：[Project Amber (gi.yatta.moe)](https://gi.yatta.moe/) — 遊戲資料直接解包
-- 等級成長曲線：[AnimeGameData](https://github.com/DimbreathBot/AnimeGameData) 的 `AvatarCurveExcelConfigData` 與 `WeaponCurveExcelConfigData`
+- 等級成長曲線與經驗表：[AnimeGameData](https://github.com/DimbreathBot/AnimeGameData) 的 `AvatarCurve` / `WeaponCurve` / `AvatarLevel` / `WeaponLevel`
 - 定位與配裝分類：社群共識＋技能文本人工整理
 
 圖片版權屬 HoYoverse，僅供個人查閱使用。

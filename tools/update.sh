@@ -25,10 +25,13 @@ echo "[5/7] 更新成長曲線（用來算 Lv90 基礎面板）…"
 B="https://raw.githubusercontent.com/DimbreathBot/AnimeGameData/master/ExcelBinOutput"
 curl -s -f --max-time 60 -A "Mozilla/5.0" "$B/AvatarCurveExcelConfigData.json" -o data/_raw/avatar_curve.json || echo "  （沿用舊的曲線資料）"
 curl -s -f --max-time 60 -A "Mozilla/5.0" "$B/WeaponCurveExcelConfigData.json" -o data/_raw/weapon_curve.json || echo "  （沿用舊的曲線資料）"
+curl -s -f --max-time 60 -A "Mozilla/5.0" "$B/AvatarLevelExcelConfigData.json" -o data/_raw/avatar_level.json || echo "  （沿用舊的經驗表）"
+curl -s -f --max-time 60 -A "Mozilla/5.0" "$B/WeaponLevelExcelConfigData.json" -o data/_raw/weapon_level.json || echo "  （沿用舊的經驗表）"
 
 echo "[6/7] 重建輸出檔…"
 node tools/build-equip.js
 node tools/build-data.js
+node tools/validate.js || echo "  ⚠ 配裝驗證沒過，請看上面的訊息修 tools/builds.js"
 
 echo "[7/7] 補下載圖片與圖標…"
 bash tools/fetch-images.sh
