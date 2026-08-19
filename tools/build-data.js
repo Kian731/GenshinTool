@@ -1,0 +1,211 @@
+// 由 Project Amber (gi.yatta.moe) 原始資料 + roles.js + builds.js，產生 data/characters.json / .csv / .js
+const fs = require('fs');
+const path = require('path');
+const ROOT = path.join(__dirname, '..');
+const roles = require('./roles.js');
+const builds = require('./builds.js');
+const { baseStats, buildPanel, ASSUME } = require('./build-stats.js');
+const MATS = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/_build/char-materials.json'), 'utf8'));
+
+const raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', '_raw_yatta_cht.json'), 'utf8')).data;
+
+const ELEM = { Wind:'風', Rock:'岩', Electric:'雷', Grass:'草', Water:'水', Fire:'火', Ice:'冰' };
+const ELEM_EN = { Wind:'Anemo', Rock:'Geo', Electric:'Electro', Grass:'Dendro', Water:'Hydro', Fire:'Pyro', Ice:'Cryo' };
+const WEAPON = { WEAPON_SWORD_ONE_HAND:'單手劍', WEAPON_CLAYMORE:'雙手劍', WEAPON_POLE:'長柄武器', WEAPON_BOW:'弓', WEAPON_CATALYST:'法器' };
+const REGION = {
+  MONDSTADT:'蒙德', LIYUE:'璃月', INAZUMA:'稻妻', SUMERU:'須彌', FONTAINE:'楓丹',
+  NATLAN:'納塔', NODKRAI:'挪德卡萊', NODKRAI_ZIBAI:'挪德卡萊', SNEZHNAYA:'至冬',
+  SNEZHNAYA_STAR:'至冬', FATUI:'愚人眾', RANGER:'其他', OMNI_SCOURGE:'其他',
+  HVISION:'其他', MAINACTOR:'旅行者',
+};
+// 體型 → 性別 / 少年‧成年（以官方模型體型為準，非實際年齡）
+const BODY = {
+  LOLI: { 體型:'蘿莉', 性別:'女', 年齡層:'少年' },
+  GIRL: { 體型:'少女', 性別:'女', 年齡層:'少年' },
+  LADY: { 體型:'成女', 性別:'女', 年齡層:'成年' },
+  BOY:  { 體型:'少年', 性別:'男', 年齡層:'少年' },
+  MALE: { 體型:'成男', 性別:'男', 年齡層:'成年' },
+};
+
+// ── 技能文字整理 ────────────────────────────────────────
+// 保留遊戲原本的重點顏色，移除 {LINK} 之類的內部標記
+function fmt(s) {
+  return String(s || '')
+    .replace(/\{LINK#[^}]*\}|\{\/LINK\}/g, '')
+    .replace(/\{NON_BREAK_SPACE\}/g, ' ')
+    .replace(/<color=#([0-9A-Fa-f]{6})[0-9A-Fa-f]{0,2}>/g, '<b style="color:#$1">')
+    .replace(/<\/color>/g, '</b>')
+    .replace(/<[^>]*>/g, m => /^<\/?b/.test(m) ? m : '')
+    .replace(/\\n|\r\n|\n/g, '<br>')
+    .trim();
+}
+const plain = s => fmt(s).replace(/<[^>]+>/g, '');
+
+// ── 技能功能標籤（由技能文字自動擷取） ──────────────────
+// 逐句判斷：「加成」類必須句中出現隊友範圍字樣才會標記，其餘為通用機能
+const TEAM = /隊伍|附近的所有角色|附近的角色|目前場上角色|所有角色|隊友|領域[中內]的角色|範圍內的角色|其中的角色|影響下的角色|其他角色/;
+// [標籤, 效果條件, 是否需要隊友範圍, 額外條件(句子, 角色名)]
+// 排除「自己的抗性／防禦力降低」這類自身減益（例如荒瀧一斗）
+const notSelf = kind => (s, name) =>
+  !new RegExp('(自身|自己|' + name + ')的?[^，。]{0,10}(所有)?(元素)?' + kind).test(s);
+const RULES = [
+  ['減抗',      /((元素抗性|抗性)[^，。]{0,8}(降低|減少)|(降低|減少)[^，。]{0,20}抗性)/, false, notSelf('抗性')],
+  ['減防',      /(防禦力[^，。]{0,8}(降低|減少)|(降低|減少)[^，。]{0,20}防禦力|無視[^，。]{0,12}防禦力)/, false, notSelf('防禦力')],
+  ['團隊增傷',  /(造成的傷害|元素傷害加成|傷害加成|反應傷害)(提升|提高|擢升)|傷害(提升|提高|擢升)|(提供|獲得|使|施加)[^，。]{0,20}元素傷害加成/, true],
+  ['攻擊力加成', /攻擊力(提升|提高)|(獲得|提供|使)[^，。]{0,20}攻擊力加成|(提高|提升)[^，。]{0,20}攻擊力/, true],
+  ['暴擊加成',  /暴擊(率|傷害)(提升|提高)|(提高|提升)[^，。]{0,20}暴擊(率|傷害)/, true],
+  ['精通加成',  /元素精通(提升|提高)|(提高|提升)[^，。]{0,20}元素精通/, true],
+  ['生命值加成', /生命值上限(提升|提高)|(提高|提升)[^，。]{0,20}生命值上限/, true],
+  ['防禦力加成', /防禦力(提升|提高)|(獲得|提供|使)[^，。]{0,20}防禦力加成|(提高|提升)[^，。]{0,20}防禦力/, true],
+  ['充能支援',  /恢復[^，。]{0,12}元素能量|元素充能效率(提升|提高)/, false],
+  ['治療',      /回復生命值|恢復生命值|治療量|進行治療|持續回復/, false],
+  ['護盾',      /護盾/, false],
+  ['元素附魔',  /附魔|轉為造成[^，。]{0,12}元素傷害/, false],
+  ['聚怪',      /牽引|吸引附近|嘲諷|拉近/, false],
+  ['減傷',      /受到的傷害(降低|減少)|傷害減免|承受的傷害(降低|減少)/, false],
+  ['抗打斷',    /抗打斷/, false],
+];
+
+// 依句子切開（<br> 也視為斷句），避免跨句誤判
+const sentences = html => String(html)
+  .replace(/<br>/g, '。').replace(/<[^>]+>/g, '')
+  .split(/[。！\n]/).filter(s => s.trim());
+
+function tagSkills(src, name) {
+  const out = {};
+  for (const [label, htmlList] of src) {
+    const segs = htmlList.flatMap(sentences);
+    for (const [tag, re, needTeam, needAlso] of RULES) {
+      if (segs.some(s => re.test(s) && (!needTeam || TEAM.test(s)) && (!needAlso || needAlso(s, name)))) {
+        (out[tag] = out[tag] || []).push(label);
+      }
+    }
+  }
+  return out;
+}
+
+const items = Object.values(raw.items).sort((a, b) => a.release - b.release || String(a.id).localeCompare(String(b.id)));
+const missRole = [], missBuild = [], noDetail = [];
+
+const out = items.map(c => {
+  const isTraveler = c.region === 'MAINACTOR' && /^1000000[57]/.test(String(c.id));
+  const g = BODY[c.bodyType] || {};
+  const key = isTraveler ? `旅行者|${c.element}` : c.name;
+  const r = roles[key];
+  const b = builds[key];
+  if (!r) missRole.push(c.name);
+  if (!b) missBuild.push(c.name);
+  const short = c.icon.replace('UI_AvatarIcon_', '');
+  const el = c.element || null;
+  const name = isTraveler ? `旅行者（${g.性別 === '男' ? '空' : '熒'}）·${ELEM[el] || ''}` : c.name;
+
+  // 天賦與命座
+  let 天賦 = [], 命座 = [], 功能 = {}, detail = null;
+  const df = path.join(ROOT, 'data', '_raw', 'detail', c.id + '.json');
+  if (fs.existsSync(df)) {
+    const d = detail = JSON.parse(fs.readFileSync(df, 'utf8')).data;
+    const ts = Object.values(d.talent || {});
+    let seenSkill = 0;
+    天賦 = ts.map((t, i) => {
+      let 類型;
+      if (i === 0) 類型 = '普通攻擊';
+      else if (t.type === 1) 類型 = '元素爆發';
+      else if (t.type === 2) 類型 = '固有天賦';
+      else 類型 = (++seenSkill === 1) ? '元素戰技' : '特殊技能';
+      return { 類型, 名稱: t.name, 說明: fmt(t.description), 冷卻: t.cooldown || null, 消耗: t.cost || null };
+    });
+    命座 = Object.values(d.constellation || {}).map((x, i) => ({ 序: i + 1, 名稱: x.name, 說明: fmt(x.description) }));
+    功能 = tagSkills([
+      ['主動', 天賦.filter(t => t.類型 !== '固有天賦').map(t => t.說明)],
+      ['被動', 天賦.filter(t => t.類型 === '固有天賦').map(t => t.說明)],
+      ['命座', 命座.map(x => x.說明)],
+    ], c.name);
+  } else noDetail.push(c.name);
+
+  const mats = MATS[c.id] || { 突破: [], 天賦: [] };
+
+  // Lv90 基礎面板 + 有效詞條 + 畢業目標（詳見 tools/build-stats.js）
+  const 基礎面板 = detail ? baseStats(detail) : null;
+  const meta = {
+    元素: el ? ELEM[el] : '無', 定位: r ? r[0] : '未分類', 原名: c.name,
+    反應體系: b ? (b.r || []) : [], 聖遺物: b ? (b.a || []) : [], 武器推薦: b ? (b.w || []) : [],
+  };
+  const panel = (detail && 基礎面板) ? buildPanel(meta, detail, 基礎面板) : null;
+
+  return {
+    id: String(c.id),
+    名稱: name,
+    原名: c.name,
+    星級: c.rank,
+    元素: el ? ELEM[el] : '無',
+    元素Key: el || 'None',
+    元素EN: el ? ELEM_EN[el] : '—',
+    武器: WEAPON[c.weaponType] || '—',
+    定位: r ? r[0] : '未分類',
+    標籤: r ? r[1] : [],
+    特色: r ? r[2] : '',
+    性別: g.性別 || '—',
+    體型: g.體型 || '—',
+    年齡層: g.年齡層 || '—',
+    地區: REGION[c.region] || c.region,
+    突破加成: raw.props[c.specialProp] || '—',
+    生日: c.birthday && c.birthday[0] ? `${c.birthday[0]}/${c.birthday[1]}` : '—',
+    上線日: new Date(c.release * 1000).toISOString().slice(0, 10),
+    是旅行者: isTraveler || c.region === 'MAINACTOR',
+    反應體系: b ? (b.r || []) : [],
+    聖遺物: b ? (b.a || []) : [],
+    武器推薦: b ? (b.w || []) : [],
+    關鍵命座: b ? (b.k || []) : [],
+    配裝推測: !!(b && b.x),
+    配裝備註: (b && b.note) || '',
+    功能,
+    天賦,
+    命座,
+    基礎面板: 基礎面板 ? {
+      生命值: 基礎面板.生命值, 攻擊力: 基礎面板.攻擊力, 防禦力: 基礎面板.防禦力,
+      突破加成值: 基礎面板.突破加成Key === 'FIGHT_PROP_ELEMENT_MASTERY'
+        ? Math.round(基礎面板.突破加成值) + ''
+        : (基礎面板.突破加成值 * 100).toFixed(1) + '%',
+    } : null,
+    成長屬性: panel ? panel.成長屬性 : '—',
+    有效詞條: panel ? panel.有效詞條 : null,
+    畢業目標: panel ? panel.畢業目標 : [],
+    爆發耗能: panel ? panel.爆發耗能 : null,
+    突破素材: mats.突破,
+    天賦素材: mats.天賦,
+    頭像: `images/icon/${short}.png`,
+    立繪: `images/splash/${short}.png`,
+  };
+});
+
+const dataDir = path.join(ROOT, 'data');
+fs.writeFileSync(path.join(dataDir, 'characters.json'), JSON.stringify(out, null, 1), 'utf8');
+fs.writeFileSync(path.join(dataDir, 'characters.js'), 'window.CHARACTERS = ' + JSON.stringify(out) + ';\n', 'utf8');
+
+// CSV（Excel 用，BOM 開頭避免亂碼）— 不含天賦／命座全文
+const cols = ['名稱','星級','元素','武器','定位','標籤','反應體系','功能標籤','聖遺物','武器推薦','關鍵命座','性別','體型','年齡層','地區','突破加成','生日','上線日','特色'];
+const cell = (o, k) => {
+  if (k === '功能標籤') return Object.keys(o.功能).join('/');
+  if (k === '關鍵命座') return o.關鍵命座.map(([n, d]) => `C${n} ${d}`).join('；');
+  const v = o[k];
+  return Array.isArray(v) ? v.join('/') : v;
+};
+const csv = '﻿' + cols.join(',') + '\n' + out.map(o =>
+  cols.map(k => {
+    const v = cell(o, k);
+    return /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : v;
+  }).join(',')
+).join('\n');
+fs.writeFileSync(path.join(dataDir, 'characters.csv'), csv, 'utf8');
+
+const mb = n => (fs.statSync(path.join(dataDir, n)).size / 1048576).toFixed(2) + ' MB';
+console.log('已輸出 %d 名角色 → characters.json (%s) / .js (%s) / .csv', out.length, mb('characters.json'), mb('characters.js'));
+if (missRole.length) console.log('⚠ 缺少定位分類：', [...new Set(missRole)].join(', '));
+if (missBuild.length) console.log('⚠ 缺少配裝資料：', [...new Set(missBuild)].join(', '));
+if (noDetail.length) console.log('⚠ 缺少天賦資料（請執行 tools/fetch-detail.sh）：', [...new Set(noDetail)].join(', '));
+const by = k => out.reduce((m, o) => (m[o[k]] = (m[o[k]] || 0) + 1, m), {});
+const byArr = k => out.reduce((m, o) => (o[k].forEach(v => m[v] = (m[v] || 0) + 1), m), {});
+console.log('定位', by('定位'));
+console.log('反應體系', byArr('反應體系'));
+console.log('功能標籤', out.reduce((m, o) => (Object.keys(o.功能).forEach(v => m[v] = (m[v] || 0) + 1), m), {}));
+console.log('天賦數合計', out.reduce((n, o) => n + o.天賦.length, 0), '｜命座數合計', out.reduce((n, o) => n + o.命座.length, 0));

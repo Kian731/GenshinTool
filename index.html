@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>原神 全角色圖鑒</title>
+<style>
+:root{
+  --bg:#12131a; --bg2:#191b25; --card:#20222e; --line:#2e3140;
+  --txt:#e8e9f0; --dim:#9aa0b5; --gold:#e8c56a;
+  --e-風:#74c2a8; --e-岩:#fab632; --e-雷:#b08fc4; --e-草:#a5c83b;
+  --e-水:#4cc2f1; --e-火:#ef7a35; --e-冰:#8fe3ee; --e-無:#8b90a6;
+  --r5:linear-gradient(160deg,#a2703c,#e0aa5a); --r4:linear-gradient(160deg,#5c4a8a,#9a72c4);
+  --r3:linear-gradient(160deg,#3a5a7a,#5b8fb8); --r2:linear-gradient(160deg,#3a6152,#5f9b7d);
+  --r1:linear-gradient(160deg,#4a4e5e,#767c90);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);
+  font-family:"Noto Sans TC","Microsoft JhengHei",-apple-system,"Segoe UI",sans-serif;}
+header{position:sticky;top:0;z-index:30;background:rgba(18,19,26,.94);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.head-in{max-width:1500px;margin:0 auto;padding:12px 18px 8px}
+.brand{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+h1{margin:0;font-size:19px;letter-spacing:2px}
+h1 span{color:var(--gold)}
+.nav{display:flex;gap:4px}
+.nav button{background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);
+  padding:5px 13px;font-size:14px;cursor:pointer;font-family:inherit;letter-spacing:1px}
+.nav button.on{color:var(--gold);border-bottom-color:var(--gold);font-weight:700}
+.sub{color:var(--dim);font-size:12px;margin-top:4px}
+.tools{display:flex;gap:9px;align-items:center;margin-top:9px;flex-wrap:wrap}
+input[type=search],select{background:var(--bg2);border:1px solid var(--line);color:var(--txt);
+  border-radius:8px;padding:7px 11px;font-size:13px;font-family:inherit}
+input[type=search]{min-width:180px}
+.btn{background:var(--bg2);border:1px solid var(--line);color:var(--dim);border-radius:8px;
+  padding:7px 11px;font-size:13px;cursor:pointer;font-family:inherit}
+.btn:hover{color:var(--txt);border-color:#4a4e63}
+.btn.on{background:var(--gold);color:#1a1a1a;border-color:var(--gold);font-weight:700}
+.filters{max-width:1500px;margin:0 auto;padding:4px 18px 12px;display:none;
+  max-height:min(58vh,520px);overflow-y:auto}
+.filters.open{display:block}
+.frow{display:flex;gap:6px;align-items:flex-start;padding:5px 0;flex-wrap:wrap}
+.flabel{color:var(--dim);font-size:12px;min-width:58px;padding-top:6px;letter-spacing:1px;flex:none}
+.chip{background:var(--bg2);border:1px solid var(--line);color:var(--dim);border-radius:20px;
+  padding:4px 12px;font-size:12.5px;cursor:pointer;user-select:none;transition:.12s;
+  font-family:inherit;display:inline-flex;align-items:center;gap:5px}
+.chip:hover{color:var(--txt)}
+.chip.on{background:#33374a;color:#fff;border-color:#5b607a;font-weight:600}
+.chip img{width:15px;height:15px;filter:brightness(0) invert(1);opacity:.85}
+.hint{color:#6f7488;font-size:11.5px;padding:2px 0 0 58px;line-height:1.6}
+main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
+.count{color:var(--dim);font-size:12.5px;margin:4px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  cursor:pointer;transition:.15s;position:relative}
+.card:hover{transform:translateY(-3px);border-color:#5b607a;box-shadow:0 8px 22px rgba(0,0,0,.5)}
+.por{position:relative;aspect-ratio:1;background:var(--r4)}
+.card[data-r="5"] .por{background:var(--r5)}
+.card[data-r="3"] .por{background:var(--r3)}
+.card[data-r="2"] .por{background:var(--r2)}
+.card[data-r="1"] .por{background:var(--r1)}
+.por img.av{width:100%;height:100%;object-fit:cover;display:block}
+.por img.eq{width:100%;height:100%;object-fit:contain;display:block;padding:6px}
+.el{position:absolute;left:4px;top:4px;width:25px;height:25px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(12,14,20,.72);box-shadow:0 1px 5px rgba(0,0,0,.6)}
+.el img{width:19px;height:19px;display:block}
+.star{position:absolute;right:5px;top:5px;background:rgba(0,0,0,.55);border-radius:10px;
+  padding:1px 6px;font-size:11px;color:var(--gold);font-weight:700}
+.role{position:absolute;left:0;bottom:0;background:rgba(0,0,0,.62);color:#fff;font-size:11px;
+  padding:2px 7px;border-radius:0 8px 0 0;letter-spacing:.5px}
+.nm{padding:7px 8px 8px;text-align:center}
+.nm b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nm small{color:var(--dim);font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{color:var(--dim);text-align:center;padding:60px 0}
+/* ── 詳情視窗 ── */
+.mask{position:fixed;inset:0;background:rgba(6,7,12,.86);backdrop-filter:blur(4px);
+  display:none;z-index:50;align-items:center;justify-content:center;padding:20px}
+.mask.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--line);border-radius:16px;max-width:1020px;
+  width:100%;max-height:90vh;display:grid;grid-template-columns:320px 1fr;overflow:hidden}
+.modal.solo{grid-template-columns:1fr;max-width:760px}
+.msplash{background:var(--r4);position:relative}
+.modal[data-r="5"] .msplash{background:var(--r5)}
+.modal[data-r="3"] .msplash{background:var(--r3)}
+.modal[data-r="2"] .msplash{background:var(--r2)}
+.modal[data-r="1"] .msplash{background:var(--r1)}
+.msplash img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+.msplash.eqbox{display:grid;place-items:center;min-height:260px}
+.msplash.eqbox img{width:78%;height:auto;object-fit:contain}
+.mright{display:flex;flex-direction:column;min-width:0;max-height:90vh}
+.mhead{padding:18px 22px 0;position:relative}
+.mhead h2{margin:0;font-size:24px}
+.mdesc{color:var(--gold);font-size:13px;margin:5px 0 12px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:0 22px;flex-wrap:wrap}
+.tab{background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);
+  padding:8px 11px;font-size:13.5px;cursor:pointer;font-family:inherit}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold);font-weight:700}
+.mbody{padding:18px 22px 24px;overflow-y:auto;flex:1}
+.kv{display:grid;grid-template-columns:82px 1fr;gap:9px 12px;font-size:13.5px;margin:0}
+.kv dt{color:var(--dim)}
+.kv dd{margin:0}
+.eline{display:inline-flex;align-items:center;gap:6px}
+.eline img{width:18px;height:18px;filter:brightness(0) invert(1);opacity:.9}
+.tags{margin-top:15px;display:flex;gap:6px;flex-wrap:wrap}
+.tag{background:#2b2f3f;border-radius:14px;padding:3px 10px;font-size:12px;color:#c9cee0}
+.tag.fn{background:#2a3b45;color:#9fd7e6}
+.tag.re{background:#3a2f45;color:#d3b3e8}
+.sec{margin-bottom:20px}
+.sec h3{font-size:13px;color:var(--gold);margin:0 0 9px;letter-spacing:1.5px;
+  border-left:3px solid var(--gold);padding-left:8px}
+.sk{background:#1f2130;border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:9px}
+.sk .skh{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.sk .kind{background:#333a52;color:#c3cae4;font-size:11px;border-radius:5px;padding:1px 7px;flex:none}
+.sk .kind.a{background:#4a3a22;color:#f0cf94}
+.sk .kind.p{background:#243c33;color:#9fdcbd}
+.sk b.nmm{font-size:14px}
+.sk .cd{color:var(--dim);font-size:11.5px}
+.sk .txt{font-size:12.8px;line-height:1.75;color:#c8ccdd}
+.sk.key{border-color:#6d5a2c;background:#251f17}
+.cnum{background:#3a3f57;color:#dfe3f2;border-radius:5px;font-size:11px;padding:1px 7px;flex:none}
+.sk.key .cnum{background:var(--gold);color:#1a1a1a;font-weight:700}
+.keytip{color:var(--gold);font-size:12px;margin-left:auto}
+.blist{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:4px}
+.bi{background:#1f2130;border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:13px}
+.bi.first{border-color:#6d5a2c;color:#f0d79c}
+.bi.link{cursor:pointer}
+.bi.link:hover{border-color:#8a90ad;color:#fff}
+.warn{background:#2a2419;border:1px solid #5c4a25;color:#e2c88b;font-size:12.2px;
+  border-radius:8px;padding:9px 12px;margin-bottom:14px;line-height:1.65}
+.close{position:absolute;right:10px;top:8px;background:rgba(0,0,0,.5);border:0;color:#fff;
+  font-size:22px;width:32px;height:32px;border-radius:50%;cursor:pointer;z-index:2}
+/* 面板 */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px;margin-bottom:6px}
+.stat{background:#1f2130;border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.stat small{color:var(--dim);font-size:11.5px;display:block}
+.stat b{font-size:17px;font-weight:700}
+.goal{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  background:#1f2130;border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-bottom:7px;flex-wrap:wrap}
+.goal .g1{font-size:13.5px}
+.goal .g2{font-size:16px;color:var(--gold);font-weight:700;margin-left:auto}
+.goal .g3{flex-basis:100%;color:var(--dim);font-size:11.5px;line-height:1.55}
+.slots{display:grid;grid-template-columns:46px 1fr;gap:7px 10px;font-size:13.5px;align-items:center}
+.slots dt{color:var(--dim)}
+.slots dd{margin:0}
+.subq{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.subq span{background:#2b2f3f;border-radius:6px;padding:3px 9px;font-size:12.5px}
+.subq span:first-child{background:#4a3a22;color:#f0cf94}
+/* 素材 */
+.mat{display:flex;align-items:center;gap:8px;background:#1f2130;border:1px solid var(--line);
+  border-radius:8px;padding:5px 9px 5px 5px;font-size:12.5px}
+.mat img{width:32px;height:32px;object-fit:contain;border-radius:5px;background:#2b2f3f}
+.mat b{font-weight:600}
+.mat i{font-style:normal;color:var(--gold)}
+.matrow{margin-bottom:11px}
+.matrow .mh{color:var(--dim);font-size:12px;margin-bottom:5px}
+.matlist{display:flex;flex-wrap:wrap;gap:6px}
+@media(max-width:820px){
+  .modal{grid-template-columns:1fr;max-height:92vh;overflow-y:auto}
+  .msplash{height:250px}
+  .mright{max-height:none}
+  .mbody{overflow:visible}
+  .flabel{min-width:100%;padding-top:0}
+  .hint{padding-left:0}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-in">
+    <div class="brand">
+      <h1>原神 <span>圖鑒</span></h1>
+      <div class="nav" id="nav">
+        <button data-v="char" class="on">角色</button>
+        <button data-v="weapon">武器</button>
+        <button data-v="artifact">聖遺物</button>
+      </div>
+    </div>
+    <div class="sub" id="sub">載入中…</div>
+    <div class="tools">
+      <input type="search" id="q" placeholder="搜尋…">
+      <select id="sort"></select>
+      <button class="btn" id="tgl">篩選條件 ▾</button>
+      <button class="btn on" id="trv">顯示旅行者</button>
+      <button class="btn" id="rst">清除篩選</button>
+    </div>
+  </div>
+  <div class="filters" id="filters"></div>
+</header>
+<main>
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"></div>
+</main>
+<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+
+<script src="data/characters.js"></script>
+<script src="data/weapons.js"></script>
+<script src="data/artifacts.js"></script>
+<script>
+const D = window.CHARACTERS || [], W = window.WEAPONS || [], A = window.ARTIFACTS || [];
+const wByName = Object.fromEntries(W.map(w => [w.名稱, w]));
+const aByName = Object.fromEntries(A.map(a => [a.名稱, a]));
+const EL_ORDER = ['風','岩','雷','草','水','火','冰','無'];
+const EL_ICON = { 風:'Wind', 岩:'Rock', 雷:'Electric', 草:'Grass', 水:'Water', 火:'Fire', 冰:'Ice' };
+const ROLE_ORDER = ['主C','副C','輔助','治療','護盾'];
+const FN_ORDER = ['團隊增傷','減抗','減防','攻擊力加成','暴擊加成','精通加成','生命值加成','防禦力加成',
+                  '充能支援','治療','護盾','元素附魔','聚怪','減傷','抗打斷'];
+const RE_ORDER = ['蒸發','融化','凍結','碎冰','超導','感電','超載','擴散','結晶','燃燒',
+                  '原激化','超激化','蔓激化','綻放','超綻放','烈綻放',
+                  '月綻放','月感電','月結晶','星爍','星擴散','星超導','特殊'];
+const WTYPE_ORDER = ['單手劍','雙手劍','長柄武器','弓','法器'];
+const uniq = a => [...new Set(a)];
+const sortBy = o => (a, b) => { const i = o.indexOf(a), j = o.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); };
+const elIcon = el => EL_ICON[el] ? '<img src="images/element/' + EL_ICON[el] + '.png" alt="' + el + '">' : '';
+const esc = s => String(s).replace(/"/g, '&quot;');
+
+// ── 三個檢視的設定 ────────────────────────────────────
+const VIEWS = {
+  char: {
+    data: D, ph: '搜尋角色 / 標籤 / 武器 / 聖遺物…',
+    sorts: [['new','上線日：新 → 舊'],['old','上線日：舊 → 新'],['rank','星級 → 元素'],
+            ['elem','元素 → 星級'],['role','定位 → 星級'],['name','名稱']],
+    groups: [
+      { label:'元素', key:'元素', mode:'val', vals:EL_ORDER, icon:true },
+      { label:'武器', key:'武器', mode:'val', vals:['單手劍','雙手劍','長柄武器','弓','法器'] },
+      { label:'星級', key:'星級', mode:'val', vals:[5,4] },
+      { label:'定位', key:'定位', mode:'val', vals:uniq(D.map(c => c.定位)).sort(sortBy(ROLE_ORDER)) },
+      { label:'反應體系', key:'反應體系', mode:'arr', vals:uniq(D.flatMap(c => c.反應體系)).sort(sortBy(RE_ORDER)) },
+      { label:'技能功能', key:'功能', mode:'fn', vals:uniq(D.flatMap(c => Object.keys(c.功能))).sort(sortBy(FN_ORDER)) },
+      { label:'成長屬性', key:'成長屬性', mode:'val', vals:['攻擊力','生命值','防禦力','元素精通'] },
+      { label:'性別', key:'性別', mode:'val', vals:['男','女'] },
+      { label:'體型', key:'體型', mode:'val', vals:['少年','成男','蘿莉','少女','成女'] },
+      { label:'年齡', key:'年齡層', mode:'val', vals:['少年','成年'] },
+      { label:'地區', key:'地區', mode:'val', vals:uniq(D.map(c => c.地區)) },
+    ],
+    search: c => [c.名稱, c.原名, c.標籤.join(''), c.特色, c.元素EN, c.地區, c.定位,
+                  c.反應體系.join(''), c.聖遺物.join(''), c.武器推薦.join(''), Object.keys(c.功能).join('')].join(''),
+    cmp: {
+      new: (a,b) => b.上線日.localeCompare(a.上線日),
+      old: (a,b) => a.上線日.localeCompare(b.上線日),
+      rank:(a,b) => b.星級-a.星級 || EL_ORDER.indexOf(a.元素)-EL_ORDER.indexOf(b.元素) || a.上線日.localeCompare(b.上線日),
+      elem:(a,b) => EL_ORDER.indexOf(a.元素)-EL_ORDER.indexOf(b.元素) || b.星級-a.星級 || a.上線日.localeCompare(b.上線日),
+      role:(a,b) => ROLE_ORDER.indexOf(a.定位)-ROLE_ORDER.indexOf(b.定位) || b.星級-a.星級 || a.上線日.localeCompare(b.上線日),
+      name:(a,b) => a.名稱.localeCompare(b.名稱,'zh-Hant'),
+    },
+    card: c => '<div class="card" data-r="' + c.星級 + '" data-t="char" data-k="' + c.id + '">' +
+      '<div class="por"><img class="av" src="' + c.頭像 + '" alt="' + esc(c.名稱) + '" loading="lazy">' +
+      '<div class="el" title="' + c.元素 + '元素">' + elIcon(c.元素) + '</div>' +
+      '<div class="star">' + c.星級 + '★</div><div class="role">' + c.定位 + '</div></div>' +
+      '<div class="nm"><b>' + c.名稱 + '</b><small>' + c.武器 + '</small></div></div>',
+  },
+  weapon: {
+    data: W, ph: '搜尋武器名稱 / 效果…',
+    sorts: [['rank','星級 → 類型'],['atk','基礎攻擊：高 → 低'],['newest','新增順序：新 → 舊'],['name','名稱']],
+    groups: [
+      { label:'類型', key:'類型', mode:'val', vals:WTYPE_ORDER },
+      { label:'星級', key:'星級', mode:'val', vals:[5,4,3,2,1] },
+      { label:'副屬性', key:'副屬性', mode:'val', vals:uniq(W.map(w => w.副屬性)) },
+    ],
+    search: w => [w.名稱, w.類型, w.副屬性, w.技能名, (w.精煉[0] || '').replace(/<[^>]+>/g, ''), w.描述].join(''),
+    cmp: {
+      rank:(a,b) => b.星級-a.星級 || WTYPE_ORDER.indexOf(a.類型)-WTYPE_ORDER.indexOf(b.類型) || b.id-a.id,
+      atk: (a,b) => b.基礎攻擊-a.基礎攻擊,
+      newest:(a,b) => b.id-a.id,
+      name:(a,b) => a.名稱.localeCompare(b.名稱,'zh-Hant'),
+    },
+    card: w => '<div class="card" data-r="' + w.星級 + '" data-t="weapon" data-k="' + w.id + '">' +
+      '<div class="por"><img class="eq" src="' + w.圖標 + '" alt="' + esc(w.名稱) + '" loading="lazy">' +
+      '<div class="star">' + w.星級 + '★</div><div class="role">' + w.類型 + '</div></div>' +
+      '<div class="nm"><b>' + w.名稱 + '</b><small>攻擊 ' + w.基礎攻擊 + '｜' + w.副屬性 + '</small></div></div>',
+  },
+  artifact: {
+    data: A, ph: '搜尋聖遺物 / 套裝效果…',
+    sorts: [['rank','星級 → 新增順序'],['name','名稱']],
+    groups: [
+      { label:'星級', key:'星級', mode:'val', vals:[5,4,3] },
+      { label:'件數', key:'件數', mode:'val', vals:uniq(A.map(a => a.件數)).sort((x,y)=>y-x) },
+    ],
+    search: a => [a.名稱, a.二件, a.四件].join('').replace(/<[^>]+>/g, ''),
+    cmp: {
+      rank:(a,b) => b.星級-a.星級 || b.id-a.id,
+      name:(a,b) => a.名稱.localeCompare(b.名稱,'zh-Hant'),
+    },
+    card: a => '<div class="card" data-r="' + a.星級 + '" data-t="artifact" data-k="' + a.id + '">' +
+      '<div class="por"><img class="eq" src="' + a.圖標 + '" alt="' + esc(a.名稱) + '" loading="lazy">' +
+      '<div class="star">' + a.星級 + '★</div><div class="role">' + a.件數 + ' 件</div></div>' +
+      '<div class="nm"><b>' + a.名稱 + '</b><small>' + (a.二件 || '').replace(/<[^>]+>/g, '').slice(0, 14) + '</small></div></div>',
+  },
+};
+
+let view = 'char', showTraveler = true, q = '', fnSrc = '全部';
+const state = {}, sortKey = {};
+Object.keys(VIEWS).forEach(v => { state[v] = {}; VIEWS[v].groups.forEach(g => state[v][g.key] = new Set()); sortKey[v] = VIEWS[v].sorts[0][0]; });
+
+const $ = id => document.getElementById(id);
+const fBox = $('filters');
+
+function buildControls() {
+  const V = VIEWS[view];
+  $('q').placeholder = V.ph;
+  $('sort').innerHTML = V.sorts.map(([k, t]) => '<option value="' + k + '"' + (k === sortKey[view] ? ' selected' : '') + '>' + t + '</option>').join('');
+  $('trv').style.display = view === 'char' ? '' : 'none';
+  fBox.innerHTML = V.groups.map(g =>
+    '<div class="frow"><div class="flabel">' + g.label + '</div>' +
+    g.vals.map(v => {
+      const style = g.key === '元素' ? ' style="color:var(--e-' + v + ')"' : '';
+      const txt = g.key === '星級' ? v + '★' : (g.key === '件數' ? v + ' 件' : v);
+      return '<button class="chip' + (state[view][g.key].has(String(v)) ? ' on' : '') + '" data-k="' + g.key +
+        '" data-v="' + v + '"' + style + '>' + (g.icon ? elIcon(v) : '') + txt + '</button>';
+    }).join('') + '</div>' +
+    (g.mode === 'fn'
+      ? '<div class="frow"><div class="flabel">來源</div>' +
+        ['全部','主動','被動','命座'].map(s => '<button class="chip src' + (s === fnSrc ? ' on' : '') + '" data-src="' + s + '">' + s + '</button>').join('') +
+        '</div><div class="hint">功能標籤由技能／命座原文自動擷取；「加成」類只計算對隊友生效的效果。</div>'
+      : '')
+  ).join('');
+}
+
+fBox.addEventListener('click', e => {
+  const b = e.target.closest('.chip');
+  if (!b) return;
+  if (b.dataset.src) {
+    fnSrc = b.dataset.src;
+    fBox.querySelectorAll('.chip.src').forEach(x => x.classList.toggle('on', x === b));
+  } else {
+    const s = state[view][b.dataset.k];
+    s.has(b.dataset.v) ? s.delete(b.dataset.v) : s.add(b.dataset.v);
+    b.classList.toggle('on');
+  }
+  render();
+});
+$('nav').onclick = e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  view = b.dataset.v;
+  $('nav').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  $('q').value = ''; q = '';
+  buildControls(); render();
+};
+$('tgl').onclick = e => {
+  fBox.classList.toggle('open');
+  e.target.textContent = fBox.classList.contains('open') ? '篩選條件 ▴' : '篩選條件 ▾';
+};
+$('trv').onclick = e => {
+  showTraveler = !showTraveler;
+  e.target.classList.toggle('on', showTraveler);
+  e.target.textContent = showTraveler ? '顯示旅行者' : '隱藏旅行者';
+  render();
+};
+$('rst').onclick = () => {
+  Object.values(state[view]).forEach(s => s.clear());
+  fnSrc = '全部'; $('q').value = ''; q = '';
+  buildControls(); render();
+};
+$('q').oninput = e => { q = e.target.value.trim().toLowerCase(); render(); };
+$('sort').onchange = e => { sortKey[view] = e.target.value; render(); };
+
+function render() {
+  const V = VIEWS[view], st = state[view];
+  const list = V.data.filter(o => {
+    if (view === 'char' && !showTraveler && o.是旅行者) return false;
+    for (const g of V.groups) {
+      const s = st[g.key];
+      if (!s.size) continue;
+      if (g.mode === 'val') { if (!s.has(String(o[g.key]))) return false; }
+      else if (g.mode === 'arr') { if (![...s].every(v => o[g.key].includes(v))) return false; }
+      else { if (![...s].every(v => o.功能[v] && (fnSrc === '全部' || o.功能[v].includes(fnSrc)))) return false; }
+    }
+    if (q && !V.search(o).toLowerCase().includes(q)) return false;
+    return true;
+  }).sort(V.cmp[sortKey[view]]);
+  $('grid').innerHTML = list.length ? list.map(V.card).join('')
+    : '<div class="empty" style="grid-column:1/-1">找不到符合條件的項目</div>';
+  const unit = { char:'名角色', weapon:'把武器', artifact:'套聖遺物' }[view];
+  $('count').textContent = '顯示 ' + list.length + ' / ' + V.data.length + ' ' + unit +
+    '　（5★ ' + list.filter(o => o.星級 === 5).length + '　4★ ' + list.filter(o => o.星級 === 4).length + '）';
+}
+
+// ── 詳情 ─────────────────────────────────────────────
+let cur = null, curType = 'char', tab = '資料';
+$('grid').addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  openBy(card.dataset.t, card.dataset.k);
+});
+function openBy(type, key) {
+  const src = { char:D, weapon:W, artifact:A }[type];
+  cur = src.find(o => o.id === key);
+  curType = type;
+  tab = TAB_SETS[type][0];
+  openModal();
+}
+
+const matChip = m => '<span class="mat"><img src="images/item/' + m.圖標 + '.png" alt=""><b>' + m.名稱 + '</b>　<i>×' + m.數量 + '</i></span>';
+const bi = (v, i, link) => '<span class="bi' + (i === 0 ? ' first' : '') + (link ? ' link" data-link="' + link + '" data-name="' + esc(v) + '"' : '"') + '>' + v + '</span>';
+
+// 角色分頁
+function tabInfo(c) {
+  const fn = Object.entries(c.功能).map(([k, v]) => '<span class="tag fn">' + k + '<small style="opacity:.7"> ' + v.join('·') + '</small></span>').join('');
+  return '<dl class="kv">' +
+    '<dt>元素</dt><dd><span class="eline" style="color:var(--e-' + c.元素 + ')">' + elIcon(c.元素) + c.元素 + '元素 · ' + c.元素EN + '</span></dd>' +
+    '<dt>武器</dt><dd>' + c.武器 + '</dd><dt>定位</dt><dd>' + c.定位 + '</dd>' +
+    '<dt>性別</dt><dd>' + c.性別 + '</dd><dt>體型</dt><dd>' + c.體型 + '體型</dd>' +
+    '<dt>年齡層</dt><dd>' + c.年齡層 + '</dd><dt>所屬</dt><dd>' + c.地區 + '</dd>' +
+    '<dt>突破加成</dt><dd>' + c.突破加成 + (c.基礎面板 ? ' ' + c.基礎面板.突破加成值 : '') + '</dd>' +
+    '<dt>生日</dt><dd>' + c.生日 + '</dd><dt>上線日</dt><dd>' + c.上線日 + '</dd></dl>' +
+    (c.反應體系.length ? '<div class="sec" style="margin-top:18px"><h3>反應體系</h3><div class="tags" style="margin:0">' +
+      c.反應體系.map(r => '<span class="tag re">' + r + '</span>').join('') + '</div></div>' : '') +
+    (fn ? '<div class="sec"><h3>技能功能</h3><div class="tags" style="margin:0">' + fn + '</div></div>' : '') +
+    (c.標籤.length ? '<div class="sec"><h3>機制標籤</h3><div class="tags" style="margin:0">' +
+      c.標籤.map(t => '<span class="tag">' + t + '</span>').join('') + '</div></div>' : '');
+}
+function tabPanel(c) {
+  if (!c.基礎面板) return '<div class="empty">沒有面板資料</div>';
+  const b = c.基礎面板, s = c.有效詞條;
+  return '<div class="sec"><h3>Lv90 基礎面板（不含武器與聖遺物）</h3><div class="stats">' +
+      '<div class="stat"><small>生命值</small><b>' + b.生命值.toLocaleString() + '</b></div>' +
+      '<div class="stat"><small>攻擊力</small><b>' + b.攻擊力 + '</b></div>' +
+      '<div class="stat"><small>防禦力</small><b>' + b.防禦力 + '</b></div>' +
+      '<div class="stat"><small>' + c.突破加成 + '</small><b>' + b.突破加成值 + '</b></div>' +
+    '</div><div class="hint" style="padding:6px 0 0">由官方成長曲線計算，與遊戲內數值一致。傷害主要吃 <b style="color:var(--gold)">' + c.成長屬性 + '</b>。</div></div>' +
+    (s ? '<div class="sec"><h3>有效詞條</h3><dl class="slots">' +
+      '<dt>時之沙</dt><dd class="subq">' + s.沙.map(x => '<span>' + x + '</span>').join('') + '</dd>' +
+      '<dt>空之杯</dt><dd class="subq">' + s.杯.map(x => '<span>' + x + '</span>').join('') + '</dd>' +
+      '<dt>理之冠</dt><dd class="subq">' + s.冠.map(x => '<span>' + x + '</span>').join('') + '</dd>' +
+      '<dt>副詞條</dt><dd class="subq">' + s.副詞條.map(x => '<span>' + x + '</span>').join('') + '</dd>' +
+      '</dl><div class="hint" style="padding:8px 0 0">每格左邊為首選。生之花與死之羽主詞條固定為生命值與攻擊力，不用選。</div></div>' : '') +
+    '<div class="sec"><h3>畢業面板參考</h3>' +
+      c.畢業目標.map(t => '<div class="goal"><span class="g1">' + t.項目 + '</span><span class="g2">' + t.值 +
+        '</span><span class="g3">' + t.註 + '</span></div>').join('') +
+      '<div class="warn" style="margin:12px 0 0">面板數字是用固定假設算的參考值，不是精算：聖遺物 5 件滿級、主詞條照上面的「有效詞條」、副詞條給 25% 主屬性，並帶入推薦武器第一把與推薦聖遺物的 2 件效果。實際會因武器精煉、命座、隊伍增益而不同。假設可在 <b>tools/build-stats.js</b> 的 ASSUME 調整。</div></div>';
+}
+function tabTalent(c) {
+  if (!c.天賦.length) return '<div class="empty">沒有天賦資料</div>';
+  const cls = k => k === '固有天賦' ? 'p' : (k === '普通攻擊' ? '' : 'a');
+  return '<div class="sec">' + c.天賦.map(t =>
+    '<div class="sk"><div class="skh"><span class="kind ' + cls(t.類型) + '">' + t.類型 + '</span>' +
+      '<b class="nmm">' + t.名稱 + '</b>' +
+      (t.冷卻 ? '<span class="cd">冷卻 ' + t.冷卻 + 's</span>' : '') +
+      (t.消耗 ? '<span class="cd">耗能 ' + t.消耗 + '</span>' : '') +
+    '</div><div class="txt">' + t.說明 + '</div></div>').join('') + '</div>';
+}
+function tabConst(c) {
+  if (!c.命座.length) return '<div class="empty">' + (c.配裝備註 || '沒有命之座資料') + '</div>';
+  const keys = new Map(c.關鍵命座.map(([n, d]) => [n, d]));
+  return '<div class="sec">' +
+    (keys.size ? '<h3>關鍵命座：' + [...keys.keys()].map(n => 'C' + n).join('、') + '</h3>' : '') +
+    c.命座.map(x => {
+      const k = keys.get(x.序);
+      return '<div class="sk' + (k ? ' key' : '') + '"><div class="skh"><span class="cnum">C' + x.序 + '</span>' +
+        '<b class="nmm">' + x.名稱 + '</b>' + (k ? '<span class="keytip">★ ' + k + '</span>' : '') +
+        '</div><div class="txt">' + x.說明 + '</div></div>';
+    }).join('') + '</div>';
+}
+function tabBuild(c) {
+  const list = (t, arr, link) => arr.length ? '<div class="sec"><h3>' + t + '</h3><div class="blist">' +
+    arr.map((v, i) => bi(v, i, link)).join('') + '</div></div>' : '';
+  const keys = c.關鍵命座.length ? '<div class="sec"><h3>關鍵命座</h3>' +
+    c.關鍵命座.map(([n, d]) => '<div class="sk key"><div class="skh"><span class="cnum">C' + n + '</span>' +
+      '<span class="txt">' + d + '</span></div></div>').join('') + '</div>' : '';
+  return (c.配裝推測 ? '<div class="warn">⚠ 這名角色 2026 年後才上線，配裝為依技能文本與同期武器／聖遺物推斷，實戰結論可能還會變。</div>' : '') +
+    (c.配裝備註 ? '<div class="warn">' + c.配裝備註 + '</div>' : '') +
+    list('推薦聖遺物', c.聖遺物, 'artifact') + list('推薦武器', c.武器推薦, 'weapon') + keys +
+    '<div class="hint" style="padding:0">第一個為首選；「A2+B2」表示兩套散搭。點裝備名稱可看詳細資料。</div>';
+}
+function tabMat(c) {
+  const tot = {};
+  const add = arr => arr.forEach(p => p.材料.forEach(m => {
+    tot[m.名稱] = tot[m.名稱] || { ...m, 數量: 0 };
+    tot[m.名稱].數量 += m.數量;
+  }));
+  add(c.突破素材); add(c.天賦素材);
+  const mora = [...c.突破素材, ...c.天賦素材].reduce((n, p) => n + (p.摩拉 || 0), 0);
+  const rows = (title, arr, lbl) => arr.length ? '<div class="sec"><h3>' + title + '</h3>' +
+    arr.map(p => '<div class="matrow"><div class="mh">' + lbl(p) +
+      (p.摩拉 ? '　摩拉 ' + p.摩拉.toLocaleString() : '') + '</div><div class="matlist">' +
+      p.材料.map(matChip).join('') + '</div></div>').join('') + '</div>' : '';
+  return rows('角色突破素材', c.突破素材, p => '第 ' + p.階 + ' 階（上限 Lv' + p.上限 + (p.等級需求 ? '、冒險等階 ' + p.等級需求 : '') + '）')
+    + rows('天賦升級素材（單一天賦 1→10）', c.天賦素材, p => '天賦 ' + p.等級 + ' 級')
+    + '<div class="sec"><h3>合計（突破 ＋ 單一天賦點滿）</h3><div class="matlist">' +
+      Object.values(tot).sort((a, b) => b.星級 - a.星級).map(matChip).join('') +
+      '</div><div class="hint" style="padding:8px 0 0">摩拉合計約 ' + mora.toLocaleString() +
+      '。三個天賦都點滿的話，天賦素材與摩拉大約要乘以 3。</div></div>';
+}
+
+// 武器 / 聖遺物分頁
+function wInfo(w) {
+  return '<dl class="kv"><dt>類型</dt><dd>' + w.類型 + '</dd>' +
+    '<dt>星級</dt><dd>' + w.星級 + '★</dd>' +
+    '<dt>基礎攻擊</dt><dd>' + w.基礎攻擊 + '<span style="color:var(--dim);font-size:12px">（Lv90）</span></dd>' +
+    '<dt>副屬性</dt><dd>' + w.副屬性 + ' ' + w.副屬性值 + '</dd></dl>' +
+    (w.描述 ? '<div class="sec" style="margin-top:16px"><h3>武器故事</h3><div class="sk"><div class="txt">' + w.描述 + '</div></div></div>' : '') +
+    '<div class="sec"><h3>使用這把武器的角色</h3><div class="blist">' +
+      (D.filter(c => c.武器推薦.includes(w.名稱)).map(c => '<span class="bi link" data-link="char" data-name="' + esc(c.名稱) + '">' + c.名稱 + '</span>').join('') || '<span style="color:var(--dim);font-size:13px">圖鑒內沒有角色推薦這把</span>') +
+    '</div></div>';
+}
+function wRefine(w) {
+  if (!w.精煉.length) return '<div class="empty">這把武器沒有武器效果</div>';
+  return '<div class="sec"><h3>' + (w.技能名 || '武器效果') + '</h3>' +
+    w.精煉.map((t, i) => '<div class="sk"><div class="skh"><span class="kind a">精煉 ' + (i + 1) + ' 階</span></div>' +
+      '<div class="txt">' + t + '</div></div>').join('') + '</div>';
+}
+function wMat(w) {
+  if (!w.突破.length) return '<div class="empty">這把武器不需要突破素材</div>';
+  const tot = {};
+  w.突破.forEach(p => p.材料.forEach(m => { tot[m.名稱] = tot[m.名稱] || { ...m, 數量: 0 }; tot[m.名稱].數量 += m.數量; }));
+  const mora = w.突破.reduce((n, p) => n + (p.摩拉 || 0), 0);
+  return '<div class="sec"><h3>武器突破素材</h3>' +
+    w.突破.map(p => '<div class="matrow"><div class="mh">第 ' + p.階 + ' 階（上限 Lv' + p.上限 + '）　摩拉 ' + (p.摩拉 || 0).toLocaleString() +
+      '</div><div class="matlist">' + p.材料.map(matChip).join('') + '</div></div>').join('') + '</div>' +
+    '<div class="sec"><h3>合計</h3><div class="matlist">' + Object.values(tot).sort((a, b) => b.星級 - a.星級).map(matChip).join('') +
+    '</div><div class="hint" style="padding:8px 0 0">摩拉合計約 ' + mora.toLocaleString() + '（不含升級用的精鍛礦石）。</div></div>';
+}
+function aInfo(a) {
+  return '<dl class="kv"><dt>星級</dt><dd>' + a.星級範圍 + '★</dd><dt>件數</dt><dd>' + a.件數 + ' 件</dd></dl>' +
+    '<div class="sec" style="margin-top:16px"><h3>套裝效果</h3>' +
+      (a.二件 ? '<div class="sk"><div class="skh"><span class="kind a">2 件套</span></div><div class="txt">' + a.二件 + '</div></div>' : '') +
+      (a.四件 ? '<div class="sk"><div class="skh"><span class="kind a">4 件套</span></div><div class="txt">' + a.四件 + '</div></div>' : '') +
+    '</div>' +
+    '<div class="sec"><h3>推薦給這些角色</h3><div class="blist">' +
+      (D.filter(c => c.聖遺物.some(x => x.includes(a.名稱))).map(c => '<span class="bi link" data-link="char" data-name="' + esc(c.名稱) + '">' + c.名稱 + '</span>').join('') || '<span style="color:var(--dim);font-size:13px">圖鑒內沒有角色推薦這套</span>') +
+    '</div></div>';
+}
+function aPieces(a) {
+  return '<div class="sec">' + a.部件.map(p =>
+    '<div class="sk"><div class="skh"><img src="' + p.圖標 + '" style="width:40px;height:40px;object-fit:contain">' +
+    '<span class="kind">' + p.部位 + '</span><b class="nmm">' + p.名稱 + '</b></div>' +
+    '<div class="txt" style="color:#9aa0b5">' + p.說明 + '</div></div>').join('') + '</div>';
+}
+
+const TAB_SETS = { char:['資料','面板','天賦','命座','配裝','素材'], weapon:['資料','武器效果','突破素材'], artifact:['資料','部件'] };
+const TABS = {
+  char: { 資料:tabInfo, 面板:tabPanel, 天賦:tabTalent, 命座:tabConst, 配裝:tabBuild, 素材:tabMat },
+  weapon: { 資料:wInfo, 武器效果:wRefine, 突破素材:wMat },
+  artifact: { 資料:aInfo, 部件:aPieces },
+};
+
+function openModal() {
+  const c = cur, m = $('modal');
+  m.dataset.r = c.星級;
+  const isChar = curType === 'char';
+  m.className = 'modal' + (isChar ? '' : '');
+  const pic = isChar
+    ? '<img src="' + c.立繪 + '" alt="' + esc(c.名稱) + '" onerror="this.src=\'' + c.頭像 + '\';this.style.objectFit=\'contain\'">'
+    : '<img src="' + c.圖標 + '" alt="' + esc(c.名稱) + '">';
+  const sub = isChar
+    ? (c.特色 || '')
+    : (curType === 'weapon' ? c.類型 + '　基礎攻擊 ' + c.基礎攻擊 + '　' + c.副屬性 + ' ' + c.副屬性值
+       : (c.二件 || '').replace(/<[^>]+>/g, ''));
+  m.innerHTML =
+    '<div class="msplash' + (isChar ? '' : ' eqbox') + '"><button class="close" id="mclose">×</button>' + pic + '</div>' +
+    '<div class="mright"><div class="mhead"><h2>' + c.名稱 +
+      ' <span style="color:var(--gold);font-size:16px">' + c.星級 + '★</span>' +
+      (isChar ? ' <span class="eline" style="color:var(--e-' + c.元素 + ');font-size:14px">' + elIcon(c.元素) + '</span>' : '') +
+      '</h2><div class="mdesc">' + sub + '</div></div>' +
+      '<div class="tabs">' + TAB_SETS[curType].map(t =>
+        '<button class="tab' + (t === tab ? ' on' : '') + '" data-t="' + t + '">' + t + '</button>').join('') + '</div>' +
+      '<div class="mbody" id="mbody">' + TABS[curType][tab](c) + '</div></div>';
+  $('mclose').onclick = closeModal;
+  m.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+    tab = b.dataset.t;
+    m.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
+    const body = $('mbody');
+    body.innerHTML = TABS[curType][tab](cur);
+    body.scrollTop = 0;
+  });
+  $('mask').classList.add('open');
+}
+// 裝備名稱 ↔ 角色互相跳轉
+$('modal').addEventListener('click', e => {
+  const l = e.target.closest('.bi.link');
+  if (!l) return;
+  const t = l.dataset.link, n = l.dataset.name;
+  let o = null;
+  if (t === 'weapon') o = wByName[n];
+  else if (t === 'artifact') o = aByName[n.replace(/[0-9]/g, '').split('+')[0].trim()];
+  else o = D.find(c => c.名稱 === n);
+  if (!o) return;
+  cur = o; curType = t; tab = TAB_SETS[t][0];
+  openModal();
+});
+function closeModal() { $('mask').classList.remove('open'); }
+$('mask').onclick = e => { if (e.target.id === 'mask') closeModal(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+$('sub').textContent = '角色 ' + D.length + ' 名 · 武器 ' + W.length + ' 把 · 聖遺物 ' + A.length +
+  ' 套 · 天賦 ' + D.reduce((n, c) => n + c.天賦.length, 0) + ' 條 · 命座 ' + D.reduce((n, c) => n + c.命座.length, 0) +
+  ' 條 · 資料更新至 ' + D.map(c => c.上線日).sort().pop();
+buildControls();
+render();
+</script>
+</body>
+</html>
