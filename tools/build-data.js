@@ -5,6 +5,7 @@ const ROOT = path.join(__dirname, '..');
 const roles = require('./roles.js');
 const builds = require('./builds.js');
 const { baseStats, buildPanel, ASSUME } = require('./build-stats.js');
+const REF = require('./reference.js');
 const MATS = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/_build/char-materials.json'), 'utf8'));
 
 const raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', '_raw_yatta_cht.json'), 'utf8')).data;
@@ -43,27 +44,29 @@ const plain = s => fmt(s).replace(/<[^>]+>/g, '');
 
 // ── 技能功能標籤（由技能文字自動擷取） ──────────────────
 // 逐句判斷：「加成」類必須句中出現隊友範圍字樣才會標記，其餘為通用機能
-const TEAM = /隊伍|附近的所有角色|附近的角色|目前場上角色|所有角色|隊友|領域[中內]的角色|範圍內的角色|其中的角色|影響下的角色|其他角色/;
+const TEAM = /隊伍|附近的所有角色|附近的角色|目前場上角色|所有角色|隊友|領域[中內][^，。]{0,14}角色|範圍內[^，。]{0,14}角色|其中的[^，。]{0,14}角色|影響下的[^，。]{0,10}角色|其他角色/;
 // [標籤, 效果條件, 是否需要隊友範圍, 額外條件(句子, 角色名)]
 // 排除「自己的抗性／防禦力降低」這類自身減益（例如荒瀧一斗）
 const notSelf = kind => (s, name) =>
   !new RegExp('(自身|自己|' + name + ')的?[^，。]{0,10}(所有)?(元素)?' + kind).test(s);
+// 只保留「能提供給其他隊員」的能力：加成類、治療、附魔、充能、減傷、抗打斷都要求句中出現隊友範圍；
+// 減抗／減防是對敵人掛的減益、聚怪與護盾是對當前場上角色生效，皆視為團隊向
 const RULES = [
   ['減抗',      /((元素抗性|抗性)[^，。]{0,8}(降低|減少)|(降低|減少)[^，。]{0,20}抗性)/, false, notSelf('抗性')],
   ['減防',      /(防禦力[^，。]{0,8}(降低|減少)|(降低|減少)[^，。]{0,20}防禦力|無視[^，。]{0,12}防禦力)/, false, notSelf('防禦力')],
-  ['團隊增傷',  /(造成的傷害|元素傷害加成|傷害加成|反應傷害)(提升|提高|擢升)|傷害(提升|提高|擢升)|(提供|獲得|使|施加)[^，。]{0,20}元素傷害加成/, true],
+  ['團隊增傷',  /(造成的傷害|元素傷害加成|傷害加成|反應傷害)(提升|提高|擢升)|傷害(提升|提高|擢升)|(提供|獲得|使|施加)[^，。]{0,20}元素傷害加成|(提升|提高|擢升)[^，。]{0,24}造成的傷害/, true],
   ['攻擊力加成', /攻擊力(提升|提高)|(獲得|提供|使)[^，。]{0,20}攻擊力加成|(提高|提升)[^，。]{0,20}攻擊力/, true],
   ['暴擊加成',  /暴擊(率|傷害)(提升|提高)|(提高|提升)[^，。]{0,20}暴擊(率|傷害)/, true],
   ['精通加成',  /元素精通(提升|提高)|(提高|提升)[^，。]{0,20}元素精通/, true],
   ['生命值加成', /生命值上限(提升|提高)|(提高|提升)[^，。]{0,20}生命值上限/, true],
   ['防禦力加成', /防禦力(提升|提高)|(獲得|提供|使)[^，。]{0,20}防禦力加成|(提高|提升)[^，。]{0,20}防禦力/, true],
-  ['充能支援',  /恢復[^，。]{0,12}元素能量|元素充能效率(提升|提高)/, false],
-  ['治療',      /回復生命值|恢復生命值|治療量|進行治療|持續回復/, false],
-  ['護盾',      /護盾/, false],
-  ['元素附魔',  /附魔|轉為造成[^，。]{0,12}元素傷害/, false],
+  ['充能支援',  /恢復[^，。]{0,12}元素能量|元素充能效率(提升|提高)/, true],
+  ['治療',      /回復生命值|恢復生命值|治療量|進行治療|持續回復/, true],
+  ['護盾',      /(創造|獲得|展開|賦予|生成|形成|凝聚)[^，。]{0,10}護盾|護盾強效|護盾庇護/, false],
+  ['元素附魔',  /附魔|轉為[^，。]{0,14}元素傷害/, true],
   ['聚怪',      /牽引|吸引附近|嘲諷|拉近/, false],
-  ['減傷',      /受到的傷害(降低|減少)|傷害減免|承受的傷害(降低|減少)/, false],
-  ['抗打斷',    /抗打斷/, false],
+  ['減傷',      /受到的傷害(降低|減少)|傷害減免|承受的傷害(降低|減少)/, true],
+  ['抗打斷',    /抗打斷/, true],
 ];
 
 // 依句子切開（<br> 也視為斷句），避免跨句誤判
@@ -112,9 +115,15 @@ const out = items.map(c => {
       else if (t.type === 1) 類型 = '元素爆發';
       else if (t.type === 2) 類型 = '固有天賦';
       else 類型 = (++seenSkill === 1) ? '元素戰技' : '特殊技能';
-      return { 類型, 名稱: t.name, 說明: fmt(t.description), 冷卻: t.cooldown || null, 消耗: t.cost || null };
+      const 說明 = fmt(t.description);
+      const src = 類型 === '固有天賦' ? '被動' : '主動';
+      return { 類型, 名稱: t.name, 說明, 冷卻: t.cooldown || null, 消耗: t.cost || null,
+        功能: Object.keys(tagSkills([[src, [說明]]], c.name)) };
     });
-    命座 = Object.values(d.constellation || {}).map((x, i) => ({ 序: i + 1, 名稱: x.name, 說明: fmt(x.description) }));
+    命座 = Object.values(d.constellation || {}).map((x, i) => {
+      const 說明 = fmt(x.description);
+      return { 序: i + 1, 名稱: x.name, 說明, 功能: Object.keys(tagSkills([['命座', [說明]]], c.name)) };
+    });
     功能 = tagSkills([
       ['主動', 天賦.filter(t => t.類型 !== '固有天賦').map(t => t.說明)],
       ['被動', 天賦.filter(t => t.類型 === '固有天賦').map(t => t.說明)],
@@ -131,6 +140,20 @@ const out = items.map(c => {
     反應體系: b ? (b.r || []) : [], 聖遺物: b ? (b.a || []) : [], 武器推薦: b ? (b.w || []) : [],
   };
   const panel = (detail && 基礎面板) ? buildPanel(meta, detail, 基礎面板) : null;
+
+  // 參考表（HoYoLAB 社群統整）優先；表內沒有的角色沿用規則推導
+  const ref = REF[c.name];
+  const 詞條 = ref
+    ? {
+        來源: '參考表',
+        沙: ref.主詞條.時之沙.split(/\s*or\s*/), 杯: ref.主詞條.空之杯.split(/\s*or\s*/),
+        冠: ref.主詞條.理之冠.split(/\s*or\s*/), 副詞條: ref.副詞條,
+      }
+    : (panel ? {
+        來源: '規則推導',
+        沙: panel.有效詞條.沙, 杯: panel.有效詞條.杯, 冠: panel.有效詞條.冠,
+        副詞條: panel.有效詞條.副詞條.join(' > '),
+      } : null);
 
   return {
     id: String(c.id),
@@ -153,7 +176,7 @@ const out = items.map(c => {
     上線日: new Date(c.release * 1000).toISOString().slice(0, 10),
     是旅行者: isTraveler || c.region === 'MAINACTOR',
     反應體系: b ? (b.r || []) : [],
-    聖遺物: b ? (b.a || []) : [],
+    聖遺物: ref ? ref.聖遺物 : (b ? (b.a || []) : []),
     武器推薦: b ? (b.w || []) : [],
     關鍵命座: b ? (b.k || []) : [],
     配裝推測: !!(b && b.x),
@@ -168,7 +191,11 @@ const out = items.map(c => {
         : (基礎面板.突破加成值 * 100).toFixed(1) + '%',
     } : null,
     成長屬性: panel ? panel.成長屬性 : '—',
-    有效詞條: panel ? panel.有效詞條 : null,
+    參考定位: ref ? ref.定位 : '',
+    天賦優先: ref ? ref.天賦優先 : '',
+    參考面板: ref ? ref.參考面板 : '',
+    詞條來源: 詞條 ? 詞條.來源 : '',
+    有效詞條: 詞條,
     畢業目標: panel ? panel.畢業目標 : [],
     爆發耗能: panel ? panel.爆發耗能 : null,
     突破素材: mats.突破,

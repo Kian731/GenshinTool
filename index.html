@@ -45,9 +45,11 @@ input[type=search]{min-width:180px}
 .chip{background:var(--bg2);border:1px solid var(--line);color:var(--dim);border-radius:20px;
   padding:4px 12px;font-size:12.5px;cursor:pointer;user-select:none;transition:.12s;
   font-family:inherit;display:inline-flex;align-items:center;gap:5px}
-.chip:hover{color:var(--txt)}
-.chip.on{background:#33374a;color:#fff;border-color:#5b607a;font-weight:600}
+.chip:hover{color:var(--txt);background:#252838}
+.chip.on{background:var(--gold);color:#17181f !important;border-color:#f5dc9a;font-weight:700;
+  box-shadow:0 0 0 2px rgba(232,197,106,.25)}
 .chip img{width:15px;height:15px;filter:brightness(0) invert(1);opacity:.85}
+.chip.on img{filter:brightness(0);opacity:.9}
 .hint{color:#6f7488;font-size:11.5px;padding:2px 0 0 58px;line-height:1.6}
 main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
 .count{color:var(--dim);font-size:12.5px;margin:4px 0 12px}
@@ -146,11 +148,20 @@ main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
 .bi.link:hover{border-color:#8a90ad;background:#262a3a}
 .warn{background:#2a2419;border:1px solid #5c4a25;color:#e2c88b;font-size:12.2px;
   border-radius:8px;padding:9px 12px;margin-bottom:14px;line-height:1.65}
-.close{position:absolute;right:10px;top:8px;background:rgba(0,0,0,.5);border:0;color:#fff;
-  font-size:22px;width:32px;height:32px;border-radius:50%;cursor:pointer;z-index:3}
-.backbtn{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.55);border:1px solid #4a4e63;
-  color:#fff;font-size:12px;padding:5px 11px;border-radius:16px;cursor:pointer;z-index:3;font-family:inherit}
-.backbtn:hover{background:#33374a}
+/* 返回／關閉列：獨立一條，不壓在圖片或標題上 */
+.mtop{display:flex;align-items:center;gap:8px;padding:8px 12px 8px 14px;
+  border-bottom:1px solid var(--line);background:#1c1e29;min-height:44px}
+.mtop .sp{flex:1}
+.close{background:#252838;border:1px solid var(--line);color:var(--dim);
+  font-size:19px;line-height:1;width:30px;height:30px;border-radius:8px;cursor:pointer;flex:none}
+.close:hover{color:#fff;border-color:#5b607a}
+.backbtn{background:#2b2f3f;border:1px solid #4a4e63;color:#dfe3f2;font-size:12.5px;
+  padding:5px 12px;border-radius:16px;cursor:pointer;font-family:inherit;flex:none;
+  max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.backbtn:hover{background:#3a3f57;color:#fff}
+/* 天賦／命座旁的功能標註 */
+.fnb{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.fnb span{background:#2a3b45;color:#9fd7e6;font-size:10.5px;border-radius:5px;padding:1px 6px;white-space:nowrap}
 /* 面板 */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px;margin-bottom:6px}
 .stat{background:#1f2130;border:1px solid var(--line);border-radius:9px;padding:9px 11px}
@@ -212,6 +223,26 @@ main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
 .sumrow{display:flex;justify-content:space-between;font-size:13.5px;padding:7px 0;border-top:1px solid var(--line)}
 .sumrow b{color:var(--gold)}
 .emptycalc{color:var(--dim);text-align:center;padding:36px 0;line-height:1.9}
+/* 素材依合成鏈分組 */
+.mgroup{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:10px;background:#1b1d28}
+.mgroup .gt{color:#9fd7e6;font-size:11.5px;margin:2px 4px 7px;display:flex;align-items:center;gap:6px}
+.mgroup .gt b{color:var(--dim);font-weight:400}
+.mgroup .need{margin-bottom:5px;background:#232634}
+.mgroup .need:last-child{margin-bottom:0}
+/* 角色／武器挑選器 */
+.pick{position:fixed;inset:0;background:rgba(6,7,12,.86);backdrop-filter:blur(4px);
+  display:none;z-index:60;align-items:center;justify-content:center;padding:20px}
+.pick.open{display:flex}
+.pickbox{background:var(--bg2);border:1px solid var(--line);border-radius:16px;
+  width:100%;max-width:920px;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
+.pickhead{display:flex;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.pickhead b{font-size:15px}
+.pickhead input{flex:1;min-width:150px}
+.pickbody{overflow-y:auto;padding:14px 16px 18px}
+.pickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.pickgrid .card .nm{padding:5px 4px 6px}
+.pickgrid .card .nm b{font-size:12px}
+@media(max-width:700px){ .pickgrid{grid-template-columns:repeat(4,1fr);gap:7px} }
 @media(max-width:1000px){ .calcwrap{grid-template-columns:1fr} }
 @media(max-width:820px){
   .modal{grid-template-columns:1fr;max-height:92vh;overflow-y:auto}
@@ -271,6 +302,11 @@ main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
   <div id="calcview" style="display:none"></div>
 </main>
 <div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+<div class="pick" id="pick"><div class="pickbox">
+  <div class="pickhead"><b id="picktitle">選擇</b><input type="search" id="pickq" placeholder="搜尋…">
+    <button class="btn" id="pickclose">關閉</button></div>
+  <div class="pickbody"><div class="pickgrid" id="pickgrid"></div></div>
+</div></div>
 
 <script src="data/characters.js"></script>
 <script src="data/weapons.js"></script>
@@ -282,6 +318,7 @@ const MAT = (window.MATERIALS || {}).素材 || {};
 const CHAINS = (window.MATERIALS || {}).合成鏈 || [];
 const EXPT = (window.MATERIALS || {}).經驗 || {};
 const wByName = Object.fromEntries(W.map(w => [w.名稱, w]));
+const wByName2 = Object.fromEntries(W.map(w => [w.id, w]));
 const aByName = Object.fromEntries(A.map(a => [a.名稱, a]));
 const EL_ORDER = ['風','岩','雷','草','水','火','冰','無'];
 const EL_ICON = { 風:'Wind', 岩:'Rock', 雷:'Electric', 草:'Grass', 水:'Water', 火:'Fire', 冰:'Ice' };
@@ -483,12 +520,12 @@ function openBy(type, key) {
 const matChip = m => '<span class="mat"><img src="images/item/' + m.圖標 + '.png" alt=""><b>' + m.名稱 + '</b>　<i>×' + m.數量 + '</i></span>';
 // 配裝項目（帶圖示，可點擊）
 function equipChip(name, i, type) {
-  const clean = name.replace(/[0-9]/g, '').split('+')[0].trim();
+  const clean = name.replace(/[0-9]/g, '').replace(/（.*?）/g, '').split('+')[0].trim();
   const o = type === 'weapon' ? wByName[name] : aByName[clean];
   const icon = o ? '<span class="ic"><img src="' + o.圖標 + '" alt=""></span>' : '';
   const sub = type === 'weapon'
     ? (o ? o.星級 + '★ ' + o.副屬性 : '')
-    : (o ? o.星級 + '★ 套裝' : '散搭');
+    : (o ? o.星級 + '★ 套裝' + (name.match(/（(.*?)）/) ? ' · ' + name.match(/（(.*?)）/)[1] : '') : '散搭');
   return '<span class="bi link' + (i === 0 ? ' first' : '') + '" data-r="' + (o ? o.星級 : 4) + '"' +
     ' data-link="' + type + '" data-name="' + esc(name) + '">' + icon +
     '<span><b>' + name + '</b><i>' + sub + '</i></span></span>';
@@ -518,25 +555,42 @@ function tabPanel(c) {
       '<div class="stat"><small>防禦力</small><b>' + b.防禦力 + '</b></div>' +
       '<div class="stat"><small>' + c.突破加成 + '</small><b>' + b.突破加成值 + '</b></div>' +
     '</div><div class="hint" style="padding:6px 0 0">由官方成長曲線計算，與遊戲內數值一致。傷害主要吃 <b style="color:var(--gold)">' + c.成長屬性 + '</b>。</div></div>' +
-    (s ? '<div class="sec"><h3>有效詞條</h3><dl class="slots">' +
-      '<dt>時之沙</dt><dd class="subq">' + s.沙.map(x => '<span>' + x + '</span>').join('') + '</dd>' +
-      '<dt>空之杯</dt><dd class="subq">' + s.杯.map(x => '<span>' + x + '</span>').join('') + '</dd>' +
-      '<dt>理之冠</dt><dd class="subq">' + s.冠.map(x => '<span>' + x + '</span>').join('') + '</dd>' +
-      '<dt>副詞條</dt><dd class="subq">' + s.副詞條.map(x => '<span>' + x + '</span>').join('') + '</dd>' +
-      '</dl><div class="hint" style="padding:8px 0 0">每格左邊為首選。生之花與死之羽主詞條固定，不用選。</div></div>' : '') +
-    '<div class="sec"><h3>畢業面板參考</h3>' +
+    statBlock(c) +
+    (c.參考面板
+      ? '<div class="sec"><h3>參考面板</h3><div class="goal"><span class="g2" style="margin:0;font-size:15px">' +
+        c.參考面板 + '</span><span class="g3">來自社群統整表，基準為五星 0 命＋專武 1 精、四星滿命。</span></div></div>'
+      : '') +
+    '<div class="sec"><h3>本站試算（依固定假設）</h3>' +
       c.畢業目標.map(t => '<div class="goal"><span class="g1">' + t.項目 + '</span><span class="g2">' + t.值 +
         '</span><span class="g3">' + t.註 + '</span></div>').join('') +
-      '<div class="warn" style="margin:12px 0 0">面板數字是用固定假設算的參考值，不是精算：聖遺物 5 件滿級、主詞條照上面的「有效詞條」、副詞條給 25% 主屬性，並帶入推薦武器第一把與推薦聖遺物的 2 件效果。假設可在 <b>tools/build-stats.js</b> 的 ASSUME 調整。</div></div>';
+      '<div class="warn" style="margin:12px 0 0">這一段是用固定假設算的：聖遺物 5 件滿級、主詞條照上面的有效詞條、副詞條給 25% 主屬性，並帶入推薦武器第一把與推薦聖遺物的 2 件效果。假設可在 <b>tools/build-stats.js</b> 的 ASSUME 調整。</div></div>';
 }
+// 有效詞條區塊（面板頁與配裝頁共用）
+function statBlock(c) {
+  const s = c.有效詞條;
+  if (!s) return '';
+  const q = arr => (arr || []).map((x, i) => '<span' + (i === 0 ? '' : ' style="background:#2b2f3f"') + '>' + x + '</span>').join('');
+  return '<div class="sec"><h3>有效詞條推薦</h3><dl class="slots">' +
+    '<dt>時之沙</dt><dd class="subq">' + q(s.沙) + '</dd>' +
+    '<dt>空之杯</dt><dd class="subq">' + q(s.杯) + '</dd>' +
+    '<dt>理之冠</dt><dd class="subq">' + q(s.冠) + '</dd>' +
+    '<dt>副詞條</dt><dd class="subq"><span style="background:#2b2f3f;font-weight:600">' + s.副詞條 + '</span></dd>' +
+    '</dl><div class="hint" style="padding:8px 0 0">每格左邊為首選，副詞條由左至右為優先度。生之花與死之羽主詞條固定，不用選。' +
+    '（' + (s.來源 === '參考表' ? '來自社群統整表' : '本站依技能文本推導') + '）</div></div>';
+}
+const fnBadge = arr => (arr && arr.length)
+  ? '<span class="fnb">' + arr.map(f => '<span>' + f + '</span>').join('') + '</span>' : '';
 function tabTalent(c) {
   if (!c.天賦.length) return '<div class="empty">沒有天賦資料</div>';
   const cls = k => k === '固有天賦' ? 'p' : (k === '普通攻擊' ? '' : 'a');
-  return '<div class="sec">' + c.天賦.map(t =>
+  return (c.天賦優先 ? '<div class="sec"><h3>天賦優先級</h3><div class="goal"><span class="g2" style="margin:0">' +
+      c.天賦優先 + '</span><span class="g3">來自社群統整表；「視需求 可都不升」表示這名角色的天賦等級收益低。</span></div></div>' : '') +
+    '<div class="sec">' + c.天賦.map(t =>
     '<div class="sk"><div class="skh"><span class="kind ' + cls(t.類型) + '">' + t.類型 + '</span>' +
       '<b class="nmm">' + t.名稱 + '</b>' +
       (t.冷卻 ? '<span class="cd">冷卻 ' + t.冷卻 + 's</span>' : '') +
       (t.消耗 ? '<span class="cd">耗能 ' + t.消耗 + '</span>' : '') +
+      fnBadge(t.功能) +
     '</div><div class="txt">' + t.說明 + '</div></div>').join('') + '</div>';
 }
 function tabConst(c) {
@@ -548,6 +602,7 @@ function tabConst(c) {
       const k = keys.get(x.序);
       return '<div class="sk' + (k ? ' key' : '') + '"><div class="skh"><span class="cnum">C' + x.序 + '</span>' +
         '<b class="nmm">' + x.名稱 + '</b>' + (k ? '<span class="keytip">★ ' + k + '</span>' : '') +
+        fnBadge(x.功能) +
         '</div><div class="txt">' + x.說明 + '</div></div>';
     }).join('') + '</div>';
 }
@@ -557,9 +612,15 @@ function tabBuild(c) {
   const keys = c.關鍵命座.length ? '<div class="sec"><h3>關鍵命座</h3>' +
     c.關鍵命座.map(([n, d]) => '<div class="sk key"><div class="skh"><span class="cnum">C' + n + '</span>' +
       '<span class="txt">' + d + '</span></div></div>').join('') + '</div>' : '';
+  const 來源 = c.詞條來源 === '參考表'
+    ? '<div class="hint" style="padding:0 0 12px">聖遺物與詞條來自社群統整表（HoYoLAB「全角色聖遺物套裝、參考面板統整」），武器與關鍵命座為本站整理。</div>'
+    : '';
   return (c.配裝推測 ? '<div class="warn">⚠ 這名角色 2026 年後才上線，配裝為依技能文本與同期武器／聖遺物推斷，實戰結論可能還會變。</div>' : '') +
-    (c.配裝備註 ? '<div class="warn">' + c.配裝備註 + '</div>' : '') +
-    list('推薦聖遺物', c.聖遺物, 'artifact') + list('推薦武器', c.武器推薦, 'weapon') + keys +
+    (c.配裝備註 ? '<div class="warn">' + c.配裝備註 + '</div>' : '') + 來源 +
+    (c.天賦優先 ? '<div class="sec"><h3>天賦優先級</h3><div class="goal"><span class="g2" style="margin:0">' + c.天賦優先 + '</span></div></div>' : '') +
+    list('推薦聖遺物', c.聖遺物, 'artifact') + statBlock(c) + list('推薦武器', c.武器推薦, 'weapon') + keys +
+    (c.參考面板 ? '<div class="sec"><h3>參考面板</h3><div class="goal"><span class="g2" style="margin:0;font-size:15px">' +
+      c.參考面板 + '</span></div></div>' : '') +
     '<div class="hint" style="padding:0">第一個為首選；「A2+B2」表示兩套散搭。點裝備可看詳細資料，看完按左上角返回。</div>';
 }
 function tabMat(c) {
@@ -618,7 +679,7 @@ function aInfo(a) {
       (a.四件 ? '<div class="sk"><div class="skh"><span class="kind a">4 件套</span></div><div class="txt">' + a.四件 + '</div></div>' : '') +
     '</div>' +
     '<div class="sec"><h3>推薦給這些角色</h3><div class="blist">' +
-      (D.filter(c => c.聖遺物.some(x => x.replace(/[0-9]/g,'').split('+').map(s=>s.trim()).includes(a.名稱))).map(c => charChip(c)).join('')
+      (D.filter(c => c.聖遺物.some(x => x.replace(/[0-9]/g,'').replace(/（.*?）/g,'').split('+').map(s=>s.trim()).includes(a.名稱))).map(c => charChip(c)).join('')
         || '<span style="color:var(--dim);font-size:13px">圖鑒內沒有角色推薦這套</span>') +
     '</div></div>';
 }
@@ -641,16 +702,17 @@ function openModal() {
   m.dataset.r = c.星級;
   const isChar = curType === 'char';
   m.className = 'modal' + (isChar ? '' : ' eq');
-  const back = stack.length
-    ? '<button class="backbtn" id="mback">← 返回 ' + stack[stack.length - 1].name + '</button>' : '';
+  const bar = '<div class="mtop">' +
+    (stack.length ? '<button class="backbtn" id="mback">← 返回 ' + stack[stack.length - 1].name + '</button>' : '') +
+    '<span class="sp"></span><button class="close" id="mclose">×</button></div>';
   const head = isChar
-    ? '<div class="msplash">' + back + '<button class="close" id="mclose">×</button>' +
+    ? '<div class="msplash">' +
         '<img src="' + c.立繪 + '" alt="' + esc(c.名稱) + '" onerror="this.src=\'' + c.頭像 + '\';this.style.objectFit=\'contain\'"></div>' +
-      '<div class="mright"><div class="mhead"><h2>' + c.名稱 +
+      '<div class="mright">' + bar + '<div class="mhead"><h2>' + c.名稱 +
         ' <span style="color:var(--gold);font-size:16px">' + c.星級 + '★</span>' +
         ' <span class="eline" style="color:var(--e-' + c.元素 + ');font-size:14px">' + elIcon(c.元素) + '</span>' +
-        '</h2><div class="mdesc">' + (c.特色 || '') + '</div></div>'
-    : '<div class="mright" style="position:relative">' + back + '<button class="close" id="mclose">×</button>' +
+        '</h2><div class="mdesc">' + (c.參考定位 || c.特色 || '') + '</div></div>'
+    : '<div class="mright">' + bar +
       '<div class="eqhead"><div class="pic"><img src="' + c.圖標 + '" alt="' + esc(c.名稱) + '"></div>' +
         '<div class="txt2"><h2>' + c.名稱 + ' <span style="color:var(--gold);font-size:15px">' + c.星級 + '★</span></h2>' +
         '<div class="mdesc">' + (curType === 'weapon'
@@ -683,7 +745,7 @@ $('modal').addEventListener('click', e => {
   const t = l.dataset.link, n = l.dataset.name;
   let o = null;
   if (t === 'weapon') o = wByName[n];
-  else if (t === 'artifact') o = aByName[n.replace(/[0-9]/g, '').split('+')[0].trim()];
+  else if (t === 'artifact') o = aByName[n.replace(/[0-9]/g, '').replace(/（.*?）/g, '').split('+')[0].trim()];
   else o = D.find(c => c.名稱 === n);
   if (!o) return;
   stack.push({ obj: cur, type: curType, tab, name: cur.名稱 });
@@ -716,6 +778,32 @@ const newGoal = id => {
   const c = D.find(x => x.id === id);
   return { cid: id, lv: [0, LV.length - 1], tal: [[0, 9], [0, 9], [0, 9]], wid: (wByName[c.武器推薦[0]] || {}).id || '', wlv: [0, LV.length - 1] };
 };
+
+// ── 圖示挑選器（角色／武器） ──────────────────────────
+let pickCb = null, pickList = [], pickCard = null;
+function openPick(title, list, cardFn, cb) {
+  pickCb = cb; pickList = list; pickCard = cardFn;
+  $('picktitle').textContent = title;
+  $('pickq').value = '';
+  drawPick('');
+  $('pick').classList.add('open');
+  setTimeout(() => $('pickq').focus(), 50);
+}
+function drawPick(kw) {
+  const k = kw.trim().toLowerCase();
+  const list = k ? pickList.filter(o => (o.名稱 + (o.原名 || '') + (o.元素 || '') + (o.類型 || '') + (o.副屬性 || '')).toLowerCase().includes(k)) : pickList;
+  $('pickgrid').innerHTML = list.length ? list.map(pickCard).join('')
+    : '<div class="empty" style="grid-column:1/-1">找不到符合的項目</div>';
+}
+$('pickq').oninput = e => drawPick(e.target.value);
+$('pickclose').onclick = () => $('pick').classList.remove('open');
+$('pick').onclick = e => { if (e.target.id === 'pick') $('pick').classList.remove('open'); };
+$('pickgrid').addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (!card || !pickCb) return;
+  $('pick').classList.remove('open');
+  pickCb(card.dataset.k);
+});
 
 // 依「起點→終點」算出需要的突破階段與經驗
 function levelCost(from, to, promote, expTable, expPerMora) {
@@ -792,12 +880,36 @@ function calcAll() {
     圖標: (MAT[id] || {}).圖標 || '', 需求: need[id],
     持有: Number(owned[id] || 0), 合成: crafted[id] || 0,
     缺: Math.max(0, need[id] - (have[id] || 0)),
-  })).sort((a, b) => b.星級 - a.星級 || b.缺 - a.缺 || a.名稱.localeCompare(b.名稱, 'zh-Hant'));
-  return { rows, mora };
+  }));
+
+  // 依合成鏈分組，同一系列排在一起（低階 → 高階），方便看合成
+  const chainOf = {};
+  CHAINS.forEach((ch, i) => ch.forEach(id => chainOf[id] = i));
+  const groups = new Map();
+  rows.forEach(r => {
+    const key = chainOf[r.id] !== undefined ? 'c' + chainOf[r.id] : 'x' + r.id;
+    if (!groups.has(key)) groups.set(key, { key, 可合成: key[0] === 'c', rows: [] });
+    groups.get(key).rows.push(r);
+  });
+  const out2 = [...groups.values()];
+  out2.forEach(g => {
+    if (g.可合成) {
+      const order = CHAINS[Number(g.key.slice(1))];
+      g.rows.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+      g.標題 = g.rows[0].名稱.replace(/(碎屑|斷片|塊|原質)$/, '') + ' 系列';
+      g.缺 = g.rows.reduce((n, r) => n + r.缺, 0);
+    } else {
+      g.標題 = ''; g.缺 = g.rows[0].缺;
+    }
+    g.最高星 = Math.max(...g.rows.map(r => r.星級));
+  });
+  out2.sort((a, b) => (b.缺 > 0) - (a.缺 > 0) || b.最高星 - a.最高星 || b.rows.length - a.rows.length);
+  return { rows, groups: out2, mora };
 }
 
+let onlyLack = false;
 function renderCalc() {
-  const { rows, mora } = calcAll();
+  const { rows, groups, mora } = calcAll();
   const lvSel = (val, name, i) => '<select data-act="' + name + '" data-i="' + i + '">' +
     LV.map((l, j) => '<option value="' + j + '"' + (j === val ? ' selected' : '') + '>Lv' + lvLabel(j) + '</option>').join('') + '</select>';
   const talSel = (val, i, t, which) => '<select data-act="tal" data-i="' + i + '" data-t="' + t + '" data-w="' + which + '">' +
@@ -806,7 +918,6 @@ function renderCalc() {
   const goalHTML = goals.map((g, i) => {
     const c = D.find(x => x.id === g.cid);
     if (!c) return '';
-    const ws = W.filter(w => w.類型 === c.武器 && w.星級 >= 3).sort((a, b) => b.星級 - a.星級 || a.名稱.localeCompare(b.名稱, 'zh-Hant'));
     const tn = c.天賦.filter(t => ['普通攻擊', '元素戰技', '元素爆發'].includes(t.類型)).map(t => t.類型);
     return '<div class="goalcard"><div class="gh" data-r="' + c.星級 + '">' +
       '<span class="ic"><img src="' + c.頭像 + '" alt=""></span><b>' + c.名稱 + '</b>' +
@@ -819,61 +930,75 @@ function renderCalc() {
           talSel(t[0], i, ti, 0) + ' <span class="arrow">→</span> ' + talSel(t[1], i, ti, 1) + '</div>').join('') +
       '</div></div>' +
       '<div class="grow"><span>武器</span><span class="gsel">' +
-        '<select data-act="wid" data-i="' + i + '"><option value="">（不計算武器）</option>' +
-        ws.map(w => '<option value="' + w.id + '"' + (w.id === g.wid ? ' selected' : '') + '>' + w.星級 + '★ ' + w.名稱 + '</option>').join('') +
-        '</select></span></div>' +
+        (g.wid && wByName2[g.wid]
+          ? '<span class="bi" style="padding:4px 10px 4px 4px"><span class="ic" style="width:30px;height:30px"><img src="' +
+            wByName2[g.wid].圖標 + '" alt=""></span><span><b>' + wByName2[g.wid].名稱 + '</b><i>' +
+            wByName2[g.wid].星級 + '★ ' + wByName2[g.wid].類型 + '</i></span></span>'
+          : '<span style="color:var(--dim);font-size:12.5px">未選武器</span>') +
+        '<button class="btn" data-act="pickw" data-i="' + i + '" style="padding:5px 10px">選武器</button>' +
+        (g.wid ? '<button class="btn" data-act="clrw" data-i="' + i + '" style="padding:5px 10px">不計算</button>' : '') +
+        '</span></div>' +
       (g.wid ? '<div class="grow"><span>武器等級</span><span class="gsel">' + lvSel(g.wlv[0], 'wlv0', i) +
         '<span class="arrow">→</span>' + lvSel(g.wlv[1], 'wlv1', i) + '</span></div>' : '') +
       '</div>';
   }).join('');
 
-  const lackRows = rows.filter(r => r.缺 > 0);
-  const doneRows = rows.filter(r => r.缺 === 0);
+  const lackCount = rows.filter(r => r.缺 > 0).length;
   const rowHTML = r => '<div class="need"><img src="' + r.圖標 + '" alt="">' +
-    '<span class="n1"><b>' + r.名稱 + '</b><small>需要 ' + r.需求.toLocaleString() +
+    '<span class="n1"><b>' + r.名稱 + '</b><small>' + r.星級 + '★・需要 ' + r.需求.toLocaleString() +
       (r.合成 ? ' ・<span class="craftnote">合成補 ' + r.合成 + '</span>' : '') + '</small></span>' +
     '<input type="number" min="0" value="' + (owned[r.id] || 0) + '" data-act="own" data-id="' + r.id + '">' +
     '<span class="lack ' + (r.缺 ? 'no' : 'ok') + '">' + (r.缺 ? '缺 ' + r.缺.toLocaleString() : '✓') + '</span></div>';
+  const groupHTML = g => {
+    const rs = onlyLack && g.缺 === 0 ? [] : g.rows;
+    if (!rs.length) return '';
+    return '<div class="mgroup">' +
+      (g.可合成 ? '<div class="gt">🔁 ' + g.標題 + '<b>低階多的可 3→1 往上合成</b></div>' : '') +
+      rs.map(rowHTML).join('') + '</div>';
+  };
 
   $('calcview').innerHTML = '<div class="calcwrap">' +
     '<div class="panel"><h2>培養目標 <small>可以加多個角色，素材會一起算</small></h2>' +
       '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">' +
-        '<select id="addsel" style="flex:1;min-width:180px"><option value="">＋ 選一個角色加入…</option>' +
-          D.filter(c => !c.是旅行者 || c.名稱.includes('空')).sort((a, b) => a.名稱.localeCompare(b.名稱, 'zh-Hant'))
-            .map(c => '<option value="' + c.id + '">' + c.星級 + '★ ' + c.名稱 + '</option>').join('') +
-        '</select>' +
+        '<button class="btn gold" id="addbtn">＋ 加入角色</button>' +
         '<button class="btn" id="clearall">清空全部</button></div>' +
-      (goals.length ? goalHTML : '<div class="emptycalc">還沒有目標<br>從上面選一個角色開始，預設是「現在 Lv1／天賦 1」練到「Lv90 ↑／天賦 10」<br>每一欄都能自己改</div>') +
+      (goals.length ? goalHTML : '<div class="emptycalc">還沒有目標<br>按「＋ 加入角色」從圖示挑一個開始，預設是「現在 Lv1／天賦 1」練到「Lv90 ↑／天賦 10」<br>每一欄都能自己改</div>') +
     '</div>' +
     '<div class="panel"><h2>還缺的素材 <small>右邊填目前擁有數量</small></h2>' +
       (rows.length
         ? '<div class="sumrow"><span>摩拉</span><b>' + mora.toLocaleString() + '</b></div>' +
-          '<div class="sumrow"><span>缺 ' + lackRows.length + ' 種素材</span><b>' +
-            (doneRows.length ? '已滿足 ' + doneRows.length + ' 種' : '') + '</b></div>' +
-          '<div style="margin-top:12px">' + lackRows.map(rowHTML).join('') + '</div>' +
-          (doneRows.length ? '<div style="margin-top:14px"><div style="color:var(--dim);font-size:12px;margin-bottom:6px">已經夠的</div>' +
-            doneRows.map(rowHTML).join('') + '</div>' : '') +
-          '<div class="hint" style="padding:10px 0 0">・低階素材多出來時會自動用 3→1 合成往上補，已計入「合成補」。<br>' +
+          '<div class="sumrow"><span>共 ' + rows.length + ' 種素材</span><b>' +
+            (lackCount ? '還缺 ' + lackCount + ' 種' : '全部滿足 ✓') + '</b></div>' +
+          '<div style="margin:12px 0 10px"><button class="btn' + (onlyLack ? ' on' : '') + '" id="onlylack">' +
+            (onlyLack ? '只看還缺的' : '顯示全部') + '</button></div>' +
+          groups.map(groupHTML).join('') +
+          '<div class="hint" style="padding:10px 0 0">・同一系列的素材排在一起（低階在上），多出來的低階會自動 3→1 往上合成，已計入「合成補」。<br>' +
           '・經驗書與精鍛礦由所需經驗換算，最後一本無條件進位。<br>' +
           '・天賦素材以單一天賦的表計算，三個天賦分開設定；旅行者不同元素的天賦書略有差異。<br>' +
           '・設定會存在瀏覽器裡，下次打開還在。</div>'
         : '<div class="emptycalc">左邊加入目標後，這裡會列出還缺哪些素材</div>') +
     '</div></div>';
 
-  const addsel = $('addsel');
-  if (addsel) addsel.onchange = e => {
-    if (!e.target.value) return;
-    goals.push(newGoal(e.target.value)); save(); renderCalc();
-  };
+  if ($('addbtn')) $('addbtn').onclick = () => openPick('選要培養的角色',
+    D.filter(c => !c.是旅行者 || c.名稱.includes('空')).sort((a, b) => b.星級 - a.星級 || a.名稱.localeCompare(b.名稱, 'zh-Hant')),
+    VIEWS.char.card, id => { goals.push(newGoal(id)); save(); renderCalc(); });
   if ($('clearall')) $('clearall').onclick = () => { goals = []; owned = {}; save(); renderCalc(); };
+  if ($('onlylack')) $('onlylack').onclick = () => { onlyLack = !onlyLack; renderCalc(); };
 
   $('calcview').querySelectorAll('[data-act]').forEach(el => {
     const act = el.dataset.act, i = Number(el.dataset.i);
     if (act === 'del') el.onclick = () => { goals.splice(i, 1); save(); renderCalc(); };
+    else if (act === 'pickw') el.onclick = () => {
+      const c = D.find(x => x.id === goals[i].cid);
+      openPick('選 ' + c.名稱 + ' 的武器（' + c.武器 + '）',
+        W.filter(w => w.類型 === c.武器).sort((a, b) => b.星級 - a.星級 || a.名稱.localeCompare(b.名稱, 'zh-Hant')),
+        VIEWS.weapon.card, id => { goals[i].wid = id; save(); renderCalc(); });
+    };
+    else if (act === 'clrw') el.onclick = () => { goals[i].wid = ''; save(); renderCalc(); };
     else if (act === 'own') el.oninput = () => {
       owned[el.dataset.id] = Math.max(0, Number(el.value) || 0);
       save();
-      const { rows: r2, mora: m2 } = calcAll();
+      const { rows: r2 } = calcAll();
       const row = r2.find(x => x.id === el.dataset.id);
       const box = el.parentElement.querySelector('.lack');
       box.textContent = row.缺 ? '缺 ' + row.缺.toLocaleString() : '✓';
