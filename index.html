@@ -46,12 +46,24 @@ input[type=search]{min-width:180px}
   padding:4px 12px;font-size:12.5px;cursor:pointer;user-select:none;transition:.12s;
   font-family:inherit;display:inline-flex;align-items:center;gap:5px}
 .chip:hover{color:var(--txt);background:#252838}
-/* 選中＝白底黑字反白，一眼看得出來 */
-.chip.on{background:#fff;color:#15161d !important;border-color:#fff;font-weight:700;
-  box-shadow:0 0 0 2px rgba(255,255,255,.28)}
+/* 下拉選項選中＝金色反白 */
+.chip.on{background:var(--gold);color:#17181f !important;border-color:#f5dc9a;font-weight:700;
+  box-shadow:0 0 0 2px rgba(232,197,106,.25)}
 .chip img{width:15px;height:15px;filter:brightness(0) invert(1);opacity:.85}
-.chip.on img{filter:brightness(0);opacity:1}
+.chip.on img{filter:brightness(0);opacity:.9}
+/* 「篩選條件」按鈕本身＝白底黑字反白 */
+#tgl{background:#fff;color:#15161d;border-color:#fff;font-weight:700}
+#tgl:hover{background:#e6e8f0;color:#15161d;border-color:#e6e8f0}
 .hint{color:#6f7488;font-size:11.5px;padding:2px 0 0 58px;line-height:1.6}
+/* 篩選面板底部的收起條：手機上可以直接往上收 */
+.fclose{position:sticky;bottom:0;margin:10px -18px -12px;padding:10px 0 14px;
+  background:linear-gradient(180deg,rgba(18,19,26,0) 0%,rgba(18,19,26,.96) 45%,rgba(18,19,26,1) 100%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;
+  color:var(--dim);font-size:12.5px;user-select:none;letter-spacing:1px;
+  border-top:1px solid transparent}
+.fclose:hover{color:var(--txt)}
+.fclose .fbar{width:46px;height:4px;border-radius:3px;background:#4a4e63}
+.fclose:hover .fbar{background:#7b8199}
 main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
 .count{color:var(--dim);font-size:12.5px;margin:4px 0 12px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:12px}
@@ -433,10 +445,13 @@ function buildControls() {
         ['全部','主動','被動','命座'].map(s => '<button class="chip src' + (s === fnSrc ? ' on' : '') + '" data-src="' + s + '">' + s + '</button>').join('') +
         '</div><div class="hint">功能標籤由技能／命座原文自動擷取；「加成」類只計算對隊友生效的效果。</div>'
       : '')
-  ).join('');
+  ).join('') +
+  // 底部收起條：手機上可以直接點這裡把篩選收回去，不用捲回最上面
+  '<div class="fclose" id="fclose"><span class="fbar"></span>收起篩選 ▲</div>';
 }
 
 fBox.addEventListener('click', e => {
+  if (e.target.closest('#fclose')) return setFilterOpen(false);
   const b = e.target.closest('.chip');
   if (!b) return;
   if (b.dataset.src) {
@@ -460,10 +475,12 @@ $('nav').onclick = e => {
   buildControls();
   view === 'calc' ? renderCalc() : render();
 };
-$('tgl').onclick = e => {
-  fBox.classList.toggle('open');
-  e.target.textContent = fBox.classList.contains('open') ? '篩選條件 ▴' : '篩選條件 ▾';
-};
+function setFilterOpen(open) {
+  fBox.classList.toggle('open', open);
+  $('tgl').textContent = open ? '篩選條件 ▴' : '篩選條件 ▾';
+  if (!open) window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+$('tgl').onclick = () => setFilterOpen(!fBox.classList.contains('open'));
 $('trv').onclick = e => {
   showTraveler = !showTraveler;
   e.target.classList.toggle('on', showTraveler);
