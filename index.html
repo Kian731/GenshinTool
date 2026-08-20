@@ -159,6 +159,22 @@ main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
 .bi.first b{color:#f0d79c}
 .bi.link{cursor:pointer}
 .bi.link:hover{border-color:#8a90ad;background:#262a3a}
+/* 專武：使用角色用金色外框標出來 */
+.bi.sig{border-color:var(--gold);background:#241f16;box-shadow:0 0 0 1px rgba(232,197,106,.35)}
+.bi.sig:hover{border-color:#f5dc9a;background:#2c2519}
+.sigtag{font-style:normal;font-size:9.5px;font-weight:700;color:#17181f;background:var(--gold);
+  border-radius:4px;padding:0 4px;margin-left:5px;vertical-align:1px;letter-spacing:.5px}
+/* 精煉合併顯示：1～5 階數字用不同顏色 */
+.refine .rn{font-weight:700}
+.refine .rsame{color:#e8e9f0}
+.refine .r0{color:#8fd6ff}.refine .r1{color:#a9e6c0}.refine .r2{color:#f0e39a}
+.refine .r3{color:#f5c07a}.refine .r4{color:#ff9d7a}
+.refine .rsep{font-style:normal;color:#6f7488;margin:0 1px}
+.rlegend{display:inline-flex;gap:3px;margin-left:auto}
+.rlegend b{font-size:10.5px;width:15px;height:15px;border-radius:4px;display:grid;place-items:center;
+  background:#2b2f3f;font-weight:700}
+.rlegend .r0{color:#8fd6ff}.rlegend .r1{color:#a9e6c0}.rlegend .r2{color:#f0e39a}
+.rlegend .r3{color:#f5c07a}.rlegend .r4{color:#ff9d7a}
 .warn{background:#2a2419;border:1px solid #5c4a25;color:#e2c88b;font-size:12.2px;
   border-radius:8px;padding:9px 12px;margin-bottom:14px;line-height:1.65}
 /* 返回／關閉列：獨立一條，不壓在圖片或標題上 */
@@ -340,6 +356,9 @@ const FN_ORDER = ['團隊增傷','減抗','減防','攻擊力加成','暴擊加�
                   '充能支援','治療','護盾','元素附魔','聚怪','減傷','抗打斷'];
 const RE_ORDER = ['月綻放','月感電','月結晶','星爍','星擴散','星超導','夜魂'];
 const WTYPE_ORDER = ['單手劍','雙手劍','長柄武器','弓','法器'];
+const EFF_ORDER = ['攻擊力','暴擊','元素精通','元素充能','生命值','防禦力','元素傷害','物理傷害',
+                   '普攻增傷','重擊增傷','下落增傷','戰技增傷','爆發增傷','月反應','星系反應','一般反應',
+                   '護盾','治療','減抗','減防','攻速','團隊增益','夜魂','生命之契'];
 const uniq = a => [...new Set(a)];
 const sortBy = o => (a, b) => { const i = o.indexOf(a), j = o.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); };
 const elIcon = el => EL_ICON[el] ? '<img src="images/element/' + EL_ICON[el] + '.png" alt="' + el + '">' : '';
@@ -388,8 +407,10 @@ const VIEWS = {
       { label:'類型', key:'類型', mode:'val', vals:WTYPE_ORDER },
       { label:'星級', key:'星級', mode:'val', vals:[5,4,3,2,1] },
       { label:'副屬性', key:'副屬性', mode:'val', vals:uniq(W.map(w => w.副屬性)) },
+      { label:'武器效果', key:'效果標籤', mode:'arr', vals:uniq(W.flatMap(w => w.效果標籤)).sort(sortBy(EFF_ORDER)) },
+      { label:'獲取來源', key:'來源', mode:'val', vals:uniq(W.map(w => w.來源)) },
     ],
-    search: w => [w.名稱, w.類型, w.副屬性, w.技能名, (w.精煉[0] || '').replace(/<[^>]+>/g, ''), w.描述].join(''),
+    search: w => [w.名稱, w.類型, w.副屬性, w.技能名, (w.精煉[0] || '').replace(/<[^>]+>/g, ''), w.描述, w.來源, w.效果標籤.join('')].join(''),
     cmp: {
       rank:(a,b) => b.星級-a.星級 || WTYPE_ORDER.indexOf(a.類型)-WTYPE_ORDER.indexOf(b.類型) || b.id-a.id,
       atk: (a,b) => b.基礎攻擊-a.基礎攻擊,
@@ -407,8 +428,10 @@ const VIEWS = {
     groups: [
       { label:'星級', key:'星級', mode:'val', vals:[5,4,3] },
       { label:'件數', key:'件數', mode:'val', vals:uniq(A.map(a => a.件數)).sort((x,y)=>y-x) },
+      { label:'2件效果', key:'二件標籤', mode:'arr', vals:uniq(A.flatMap(a => a.二件標籤)).sort(sortBy(EFF_ORDER)) },
+      { label:'4件效果', key:'四件標籤', mode:'arr', vals:uniq(A.flatMap(a => a.四件標籤)).sort(sortBy(EFF_ORDER)) },
     ],
-    search: a => [a.名稱, a.二件, a.四件].join('').replace(/<[^>]+>/g, ''),
+    search: a => [a.名稱, a.二件, a.四件, a.效果標籤.join('')].join('').replace(/<[^>]+>/g, ''),
     cmp: {
       rank:(a,b) => b.星級-a.星級 || b.id-a.id,
       name:(a,b) => a.名稱.localeCompare(b.名稱,'zh-Hant'),
@@ -659,21 +682,37 @@ function tabMat(c) {
       '。要精算多個角色與武器請用上方「培養計算」。</div></div>';
 }
 function wInfo(w) {
+  const users = D.filter(c => c.武器推薦.includes(w.名稱));
+  // 專武來自 tools/signature.js 的對照表（已用武器類型驗證過）
+  const sig = users.filter(c => c.名稱 === w.專武 || c.原名 === w.專武);
   return '<dl class="kv"><dt>類型</dt><dd>' + w.類型 + '</dd>' +
     '<dt>星級</dt><dd>' + w.星級 + '★</dd>' +
     '<dt>基礎攻擊</dt><dd>' + w.基礎攻擊 + '<span style="color:var(--dim);font-size:12px">（Lv90）</span></dd>' +
-    '<dt>副屬性</dt><dd>' + w.副屬性 + ' ' + w.副屬性值 + '</dd></dl>' +
+    '<dt>副屬性</dt><dd>' + w.副屬性 + ' ' + w.副屬性值 + '</dd>' +
+    '<dt>獲取來源</dt><dd>' + w.來源 + '<span style="color:var(--dim);font-size:11.5px">（本站整理）</span></dd>' +
+    (w.專武 ? '<dt>專武</dt><dd><b style="color:var(--gold)">' + w.專武 + '</b>' +
+      '<span style="color:var(--dim);font-size:11.5px">　同版本上線、機制為其設計</span></dd>' : '') +
+    (w.效果標籤.length ? '<dt>效果分類</dt><dd class="tags" style="margin:0">' +
+      w.效果標籤.map(t => '<span class="tag fn">' + t + '</span>').join('') + '</dd>' : '') +
+    '</dl>' +
     (w.描述 ? '<div class="sec" style="margin-top:16px"><h3>武器故事</h3><div class="sk"><div class="txt">' + w.描述 + '</div></div></div>' : '') +
     '<div class="sec"><h3>使用這把武器的角色</h3><div class="blist">' +
-      (D.filter(c => c.武器推薦.includes(w.名稱)).map(c => charChip(c)).join('') || '<span style="color:var(--dim);font-size:13px">圖鑒內沒有角色推薦這把</span>') +
+      (users.map(c => charChip(c, sig.includes(c))).join('') || '<span style="color:var(--dim);font-size:13px">圖鑒內沒有角色推薦這把</span>') +
     '</div></div>';
 }
-const charChip = c => '<span class="bi link" data-r="' + c.星級 + '" data-link="char" data-name="' + esc(c.名稱) + '">' +
+const charChip = (c, isSig) => '<span class="bi link' + (isSig ? ' sig' : '') + '" data-r="' + c.星級 +
+  '" data-link="char" data-name="' + esc(c.名稱) + '">' +
   '<span class="ic"><img src="' + c.頭像 + '" alt="" style="width:100%;height:100%;object-fit:cover"></span>' +
-  '<span><b>' + c.名稱 + '</b><i>' + c.元素 + '｜' + c.定位 + '</i></span></span>';
+  '<span><b>' + c.名稱 + (isSig ? '<em class="sigtag">專武</em>' : '') + '</b><i>' + c.元素 + '｜' + c.定位 + '</i></span></span>';
 function wRefine(w) {
   if (!w.精煉.length) return '<div class="empty">這把武器沒有武器效果</div>';
+  if (w.精煉合併) return '<div class="sec"><h3>' + (w.技能名 || '武器效果') + '</h3>' +
+    '<div class="sk"><div class="skh"><span class="kind a">精煉 1／2／3／4／5 階</span>' +
+      '<span class="rlegend"><b class="r0">1</b><b class="r1">2</b><b class="r2">3</b><b class="r3">4</b><b class="r4">5</b></span>' +
+    '</div><div class="txt refine">' + w.精煉合併 + '</div></div>' +
+    '<div class="hint" style="padding:8px 0 0">數字用 / 分隔，由左到右是精煉 1～5 階；沒有變化的數字維持白色。</div></div>';
   return '<div class="sec"><h3>' + (w.技能名 || '武器效果') + '</h3>' +
+    '<div class="hint" style="padding:0 0 8px">這把武器各階敘述不同，無法合併成一行，以下逐階列出。</div>' +
     w.精煉.map((t, i) => '<div class="sk"><div class="skh"><span class="kind a">精煉 ' + (i + 1) + ' 階</span></div>' +
       '<div class="txt">' + t + '</div></div>').join('') + '</div>';
 }
@@ -691,8 +730,12 @@ function wMat(w) {
 function aInfo(a) {
   return '<dl class="kv"><dt>星級</dt><dd>' + a.星級範圍 + '★</dd><dt>件數</dt><dd>' + a.件數 + ' 件</dd></dl>' +
     '<div class="sec" style="margin-top:16px"><h3>套裝效果</h3>' +
-      (a.二件 ? '<div class="sk"><div class="skh"><span class="kind a">2 件套</span></div><div class="txt">' + a.二件 + '</div></div>' : '') +
-      (a.四件 ? '<div class="sk"><div class="skh"><span class="kind a">4 件套</span></div><div class="txt">' + a.四件 + '</div></div>' : '') +
+      (a.二件 ? '<div class="sk"><div class="skh"><span class="kind a">2 件套</span>' +
+        a.二件標籤.map(t => '<span class="tag fn" style="font-size:10.5px;padding:1px 7px">' + t + '</span>').join('') +
+        '</div><div class="txt">' + a.二件 + '</div></div>' : '') +
+      (a.四件 ? '<div class="sk"><div class="skh"><span class="kind a">4 件套</span>' +
+        a.四件標籤.map(t => '<span class="tag fn" style="font-size:10.5px;padding:1px 7px">' + t + '</span>').join('') +
+        '</div><div class="txt">' + a.四件 + '</div></div>' : '') +
     '</div>' +
     '<div class="sec"><h3>推薦給這些角色</h3><div class="blist">' +
       (D.filter(c => c.聖遺物.some(x => x.replace(/[0-9]/g,'').replace(/（.*?）/g,'').split('+').map(s=>s.trim()).includes(a.名稱))).map(c => charChip(c)).join('')

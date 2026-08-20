@@ -5,6 +5,8 @@ const ROOT = path.join(__dirname, '..');
 const R = p => JSON.parse(fs.readFileSync(path.join(ROOT, p), 'utf8'));
 
 const PROPS = R('data/_raw_yatta_cht.json').data.props;
+const { effectTags, mergeRefine, weaponSource } = require('./equip-tags.js');
+const SIGNATURE = require('./signature.js');
 const WTYPE = { WEAPON_SWORD_ONE_HAND:'單手劍', WEAPON_CLAYMORE:'雙手劍', WEAPON_POLE:'長柄武器', WEAPON_BOW:'弓', WEAPON_CATALYST:'法器' };
 const SLOT = { EQUIP_BRACER:'生之花', EQUIP_NECKLACE:'死之羽', EQUIP_SHOES:'時之沙', EQUIP_RING:'空之杯', EQUIP_DRESS:'理之冠' };
 const wCurve = Object.fromEntries(R('data/_raw/weapon_curve.json').find(x => x.level === 90).curveInfos.map(c => [c.type, c.value]));
@@ -63,11 +65,14 @@ const weapons = Object.keys(wlist).map(id => {
     副屬性Key: sub ? sub.propType : null,
     技能名: affix ? affix.name : '',
     精煉: affix ? Object.values(affix.upgrade).map(fmt) : [],
+    精煉合併: affix ? mergeRefine(Object.values(affix.upgrade)) : null,
+    效果標籤: affix ? effectTags(Object.values(affix.upgrade)[0]) : [],
     描述: fmt(d.description),
     突破: cost,
+    專武: SIGNATURE[d.name] || null,
     圖標: 'images/weapon/' + d.icon + '.png',
   };
-}).filter(Boolean).sort((a, b) => b.星級 - a.星級 || a.類型.localeCompare(b.類型) || Number(a.id) - Number(b.id));
+}).filter(Boolean).map(w => (w.來源 = weaponSource(w), w)).sort((a, b) => b.星級 - a.星級 || a.類型.localeCompare(b.類型) || Number(a.id) - Number(b.id));
 
 // ── 聖遺物 ────────────────────────────────────────────
 const rlist = R('data/_raw/reliquary.json').data.items;
@@ -86,6 +91,9 @@ const artifacts = Object.keys(rlist).map(id => {
     星級範圍: (d.levelList || []).join('～'),
     二件: aff[0] || '',
     四件: aff[1] || '',
+    二件標籤: effectTags(aff[0] || ''),
+    四件標籤: effectTags(aff[1] || ''),
+    效果標籤: [...new Set([...effectTags(aff[0] || ''), ...effectTags(aff[1] || '')])],
     件數: suit.length,
     部件: suit,
     圖標: 'images/artifact/' + d.icon + '.png',
