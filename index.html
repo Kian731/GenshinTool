@@ -271,6 +271,33 @@ main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
 .pickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
 .pickgrid .card .nm{padding:5px 4px 6px}
 .pickgrid .card .nm b{font-size:12px}
+/* ── 玩家公開展示 ── */
+.showcase{max-width:1160px;margin:0 auto}
+.showbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.showbox h2{font-size:18px;margin:0 0 6px;color:var(--gold)}
+.showbox p{color:var(--dim);font-size:13px;line-height:1.7;margin:5px 0}
+.uidrow{display:flex;gap:8px;align-items:center;margin-top:13px;flex-wrap:wrap}
+.uidrow input{min-width:230px;flex:1;max-width:410px}
+.showstatus{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.6}
+.showstatus.err{color:#ef8f8f}.showstatus.ok{color:#9fd7ae}
+.proxy{margin-top:13px;border-top:1px solid var(--line);padding-top:10px}
+.proxy summary{cursor:pointer;color:var(--dim);font-size:12px}.proxy p{font-size:11.5px}
+.proxy input{width:100%;margin-top:7px}
+.playerhead{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin:3px 0 16px;flex-wrap:wrap}
+.playerhead h2{margin:0;font-size:21px}.playerhead .sig{color:var(--dim);font-size:13px;margin-top:5px;max-width:720px}
+.playerstats{display:flex;gap:7px;flex-wrap:wrap}.pstat{background:#252837;border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-size:12px;color:var(--dim)}.pstat b{display:block;color:var(--txt);font-size:13px}
+.showgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:13px}
+.showchar{background:var(--card);border:1px solid var(--line);border-radius:13px;overflow:hidden}
+.showchar-top{display:flex;gap:10px;padding:11px;align-items:center;background:linear-gradient(130deg,#272937,#1c1e2a)}
+.showchar-top img{width:56px;height:56px;object-fit:cover;border-radius:9px;background:var(--r4)}
+.showchar-title{min-width:0;flex:1}.showchar-title b{display:block;font-size:16px}.showchar-title small{color:var(--dim);font-size:12px}
+.score{width:54px;height:54px;border:2px solid var(--gold);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gold);line-height:1}.score b{font-size:17px}.score small{font-size:9px;margin-top:2px}
+.showchar-body{padding:11px}.showchar-body h3{margin:10px 0 6px;font-size:12px;color:var(--gold);letter-spacing:1px}
+.showchar-body h3:first-child{margin-top:0}.buildline{font-size:12px;color:#d7d9e3;line-height:1.55;border-top:1px solid rgba(255,255,255,.07);padding:6px 0}.buildline:first-of-type{border-top:0}.buildline small{color:var(--dim)}
+.showstats{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.showstats span{background:#242633;border-radius:6px;padding:4px 5px;font-size:10.5px;color:var(--dim)}.showstats b{display:block;color:var(--txt);font-size:12px;margin-top:2px}
+.artifact{padding:6px 0;border-top:1px solid rgba(255,255,255,.07);font-size:11.5px;line-height:1.55}.artifact b{color:#d7d9e3}.artifact small{display:block;color:var(--dim)}.ascore{float:right;color:var(--gold);font-size:12px}.artnote{color:#9fd7e6 !important}
+.score-note{font-size:11px;color:var(--dim);line-height:1.55;background:#242633;border-radius:7px;padding:7px;margin-top:9px}
+.showopen{margin-top:10px;width:100%}
 @media(max-width:700px){ .pickgrid{grid-template-columns:repeat(4,1fr);gap:7px} }
 @media(max-width:1000px){ .calcwrap{grid-template-columns:1fr} }
 @media(max-width:820px){
@@ -296,6 +323,7 @@ main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
   .eqhead h2{font-size:18px}
   .mhead,.tabs,.mbody{padding-left:16px;padding-right:16px}
   .tal{grid-template-columns:1fr}
+  .showbox{padding:14px}.showgrid{grid-template-columns:1fr}.uidrow input{min-width:0;width:100%}
 }
 @media(max-width:400px){ .grid{gap:6px} .nm b{font-size:10.5px} }
 </style>
@@ -310,6 +338,7 @@ main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
         <button data-v="weapon">武器</button>
         <button data-v="artifact">聖遺物</button>
         <button data-v="calc">培養計算</button>
+        <button data-v="showcase">玩家展示</button>
       </div>
     </div>
     <div class="sub" id="sub">載入中…</div>
@@ -329,6 +358,7 @@ main{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
     <div class="grid" id="grid"></div>
   </div>
   <div id="calcview" style="display:none"></div>
+  <div id="showcaseview" style="display:none"></div>
 </main>
 <div class="mask" id="mask"><div class="modal" id="modal"></div></div>
 <div class="pick" id="pick"><div class="pickbox">
@@ -349,6 +379,8 @@ const EXPT = (window.MATERIALS || {}).經驗 || {};
 const wByName = Object.fromEntries(W.map(w => [w.名稱, w]));
 const wByName2 = Object.fromEntries(W.map(w => [w.id, w]));
 const aByName = Object.fromEntries(A.map(a => [a.名稱, a]));
+const aById = Object.fromEntries(A.map(a => [a.id, a]));
+const charById = Object.fromEntries(D.filter(c => !c.是旅行者).map(c => [c.id, c]));
 const EL_ORDER = ['風','岩','雷','草','水','火','冰','無'];
 const EL_ICON = { 風:'Wind', 岩:'Rock', 雷:'Electric', 草:'Grass', 水:'Water', 火:'Fire', 冰:'Ice' };
 const ROLE_ORDER = ['主C','副C','輔助','治療','護盾'];
@@ -449,7 +481,7 @@ Object.keys(VIEWS).forEach(v => { state[v] = {}; VIEWS[v].groups.forEach(g => st
 const fBox = $('filters');
 
 function buildControls() {
-  if (view === 'calc') { $('tools').style.display = 'none'; fBox.classList.remove('open'); fBox.innerHTML = ''; return; }
+  if (view === 'calc' || view === 'showcase') { $('tools').style.display = 'none'; fBox.classList.remove('open'); fBox.innerHTML = ''; return; }
   $('tools').style.display = '';
   const V = VIEWS[view];
   $('q').placeholder = V.ph;
@@ -493,10 +525,11 @@ $('nav').onclick = e => {
   view = b.dataset.v;
   $('nav').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
   $('q').value = ''; q = '';
-  $('codex').style.display = view === 'calc' ? 'none' : '';
+  $('codex').style.display = (view === 'calc' || view === 'showcase') ? 'none' : '';
   $('calcview').style.display = view === 'calc' ? '' : 'none';
+  $('showcaseview').style.display = view === 'showcase' ? '' : 'none';
   buildControls();
-  view === 'calc' ? renderCalc() : render();
+  view === 'calc' ? renderCalc() : (view === 'showcase' ? renderShowcase() : render());
 };
 function setFilterOpen(open) {
   fBox.classList.toggle('open', open);
@@ -519,7 +552,7 @@ $('q').oninput = e => { q = e.target.value.trim().toLowerCase(); render(); };
 $('sort').onchange = e => { sortKey[view] = e.target.value; render(); };
 
 function render() {
-  if (view === 'calc') return;
+  if (!VIEWS[view]) return;
   const V = VIEWS[view], st = state[view];
   const list = V.data.filter(o => {
     if (view === 'char' && !showTraveler && o.是旅行者) return false;
@@ -818,6 +851,191 @@ document.addEventListener('keydown', e => {
   if (!$('mask').classList.contains('open')) return;
   stack.length ? goBack() : closeModal();
 });
+
+// ══════════════════════════════════════════════════════
+//  玩家公開展示（Enka 資料由使用者自行部署的 Worker 代理）
+// ══════════════════════════════════════════════════════
+const ENKA_PROXY_DEFAULT = window.GENSHIN_SHOWCASE_PROXY || 'https://genshin-tool-showcase.kian-genshin-tool.workers.dev';
+let showcaseData = null;
+let showcaseError = '';
+
+const html = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => ({
+  '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+}[m]));
+const n = v => Number(v) || 0;
+const avLevel = a => n((a.propMap || {})['4001'] && ((a.propMap || {})['4001'].val || (a.propMap || {})['4001'].ival));
+const SLOT_CN = { EQUIP_BRACER:'生之花', EQUIP_NECKLACE:'死之羽', EQUIP_SHOES:'時之沙', EQUIP_RING:'空之杯', EQUIP_DRESS:'理之冠' };
+const PROP_CN = {
+  FIGHT_PROP_HP:'生命值', FIGHT_PROP_HP_PERCENT:'生命值%', FIGHT_PROP_ATTACK:'攻擊力', FIGHT_PROP_ATTACK_PERCENT:'攻擊力%',
+  FIGHT_PROP_DEFENSE:'防禦力', FIGHT_PROP_DEFENSE_PERCENT:'防禦力%', FIGHT_PROP_ELEMENT_MASTERY:'元素精通',
+  FIGHT_PROP_CRITICAL:'暴擊率', FIGHT_PROP_CRITICAL_HURT:'暴擊傷害', FIGHT_PROP_CHARGE_EFFICIENCY:'元素充能效率',
+  FIGHT_PROP_HEAL_ADD:'治療加成', FIGHT_PROP_PHYSICAL_ADD_HURT:'物理傷害加成',
+  FIGHT_PROP_FIRE_ADD_HURT:'火傷', FIGHT_PROP_ELEC_ADD_HURT:'雷傷', FIGHT_PROP_WATER_ADD_HURT:'水傷',
+  FIGHT_PROP_GRASS_ADD_HURT:'草傷', FIGHT_PROP_WIND_ADD_HURT:'風傷', FIGHT_PROP_ROCK_ADD_HURT:'岩傷', FIGHT_PROP_ICE_ADD_HURT:'冰傷'
+};
+const PERCENT_PROP = new Set(['FIGHT_PROP_HP_PERCENT','FIGHT_PROP_ATTACK_PERCENT','FIGHT_PROP_DEFENSE_PERCENT',
+  'FIGHT_PROP_CRITICAL','FIGHT_PROP_CRITICAL_HURT','FIGHT_PROP_CHARGE_EFFICIENCY','FIGHT_PROP_HEAL_ADD',
+  'FIGHT_PROP_PHYSICAL_ADD_HURT','FIGHT_PROP_FIRE_ADD_HURT','FIGHT_PROP_ELEC_ADD_HURT','FIGHT_PROP_WATER_ADD_HURT',
+  'FIGHT_PROP_GRASS_ADD_HURT','FIGHT_PROP_WIND_ADD_HURT','FIGHT_PROP_ROCK_ADD_HURT','FIGHT_PROP_ICE_ADD_HURT']);
+const FIGHT_ELEM = { 火:40, 雷:41, 水:42, 草:43, 風:44, 岩:45, 冰:46 };
+const fixed = (v, d = 1) => Number(v).toLocaleString('zh-TW', { maximumFractionDigits:d });
+const propText = (id, value) => (PROP_CN[id] || id.replace('FIGHT_PROP_', '')) + ' +' + fixed(value, PERCENT_PROP.has(id) ? 1 : 0) + (PERCENT_PROP.has(id) ? '%' : '');
+const findChar = id => charById[String(id)] || D.find(c => c.id.startsWith(String(id) + '-')) || null;
+const avatarIcon = c => c ? c.頭像 : '';
+const eqIcon = e => 'https://enka.network/ui/' + encodeURIComponent((e.flat || {}).icon || '') + '.png';
+const artifactItems = a => (a.equipList || []).filter(e => e.reliquary);
+const weaponItem = a => (a.equipList || []).find(e => e.weapon);
+
+function statPanel(a, c) {
+  const f = a.fightPropMap || {}, el = FIGHT_ELEM[c && c.元素];
+  const dmg = el && n(f[el]) > 0 ? fixed(n(f[el]) * 100) + '%' : (n(f[30]) > 0 ? fixed(n(f[30]) * 100) + '%' : '—');
+  return [['生命',fixed(f[2000],0)],['攻擊',fixed(f[2001],0)],['防禦',fixed(f[2002],0)],
+    ['精通',fixed(f[28],0)],['暴率',fixed(n(f[20]) * 100) + '%'],['暴傷',fixed(n(f[22]) * 100) + '%'],
+    ['充能',fixed(n(f[23]) * 100) + '%'],['傷害加成',dmg]];
+}
+
+function isRecommendedMain(slot, prop, c) {
+  const slotKey = { 時之沙:'沙', 空之杯:'杯', 理之冠:'冠' }[slot] || slot;
+  const want = c && c.有效詞條 && c.有效詞條[slotKey];
+  if (!want || !want.length) return false;
+  const label = PROP_CN[prop] || '';
+  return want.some(w => {
+    if (w === '雙暴') return /暴擊/.test(label);
+    if (w === '火傷') return label === '火傷'; if (w === '水傷') return label === '水傷';
+    if (w === '雷傷') return label === '雷傷'; if (w === '冰傷') return label === '冰傷';
+    if (w === '風傷') return label === '風傷'; if (w === '岩傷') return label === '岩傷';
+    if (w === '草傷') return label === '草傷'; if (w === '物傷') return label === '物理傷害加成';
+    return label.includes(w);
+  });
+}
+
+const SUB_ROLL_AVG = {
+  FIGHT_PROP_CRITICAL:3.3, FIGHT_PROP_CRITICAL_HURT:6.6, FIGHT_PROP_ATTACK_PERCENT:4.95,
+  FIGHT_PROP_HP_PERCENT:4.95, FIGHT_PROP_DEFENSE_PERCENT:4.95, FIGHT_PROP_CHARGE_EFFICIENCY:5.5,
+  FIGHT_PROP_ELEMENT_MASTERY:19.75, FIGHT_PROP_ATTACK:16.5, FIGHT_PROP_HP:254, FIGHT_PROP_DEFENSE:19.5
+};
+function subCategory(key) {
+  if (key === 'FIGHT_PROP_CRITICAL' || key === 'FIGHT_PROP_CRITICAL_HURT') return '雙暴';
+  if (/ATTACK/.test(key)) return '攻擊'; if (/HP/.test(key)) return '生命';
+  if (/DEFENSE/.test(key)) return '防禦'; if (/CHARGE/.test(key)) return '充能';
+  if (/MASTERY/.test(key)) return '精通'; return '';
+}
+function subWeight(key, c) {
+  const target = c && c.有效詞條 && c.有效詞條.副詞條 || '雙暴 > 攻擊 > 充能 > 精通';
+  const cat = subCategory(key), tiers = String(target).split(/[>＞]/).map(x => x.trim());
+  const hit = tiers.findIndex(t => t.includes(cat) || (cat === '雙暴' && t.includes('暴擊')));
+  return hit < 0 ? 0 : [1, .72, .5, .35][Math.min(hit, 3)];
+}
+function artifactScore(art, c) {
+  const f = art.flat || {}, r = art.reliquary || {}, slot = SLOT_CN[f.equipType] || '聖遺物';
+  const lv = Math.max(0, n(r.level) - 1), rank = n(f.rankLevel), mainProp = (f.reliquaryMainstat || {}).mainPropId;
+  const fixedMain = slot === '生之花' || slot === '死之羽';
+  const mainGood = fixedMain || isRecommendedMain(slot, mainProp, c);
+  const mainPts = mainGood ? 15 : 2, levelPts = Math.min(20, lv / 20 * 20), rarityPts = rank >= 5 ? 5 : rank === 4 ? 3 : 1;
+  let weightedRolls = 0;
+  const subs = (f.reliquarySubstats || []).map(s => {
+    const rolls = Math.max(1, n(s.statValue) / (SUB_ROLL_AVG[s.appendPropId] || Math.max(n(s.statValue), 1)));
+    const weight = subWeight(s.appendPropId, c);
+    weightedRolls += rolls * weight;
+    return { ...s, rolls, weight };
+  });
+  const subPts = Math.min(60, weightedRolls / 7 * 60);
+  return { value:Math.round(mainPts + levelPts + rarityPts + subPts), mainGood, slot, lv, rank, mainPts, levelPts, rarityPts, subPts, weightedRolls, subs };
+}
+
+function buildScore(a, c) {
+  const arts = artifactItems(a), weapon = weaponItem(a), scores = arts.map(art => artifactScore(art, c));
+  const charPts = Math.min(10, avLevel(a) / 90 * 10);
+  const weaponPts = weapon ? Math.min(10, n(weapon.weapon.level) / 90 * 10) : 0;
+  const artAvg = scores.length ? scores.reduce((sum, x) => sum + x.value, 0) / scores.length : 0;
+  const artifactPts = artAvg * .8;
+  const value = Math.round(charPts + weaponPts + artifactPts);
+  const grade = value >= 90 ? 'SS' : value >= 80 ? 'S' : value >= 65 ? 'A' : value >= 50 ? 'B' : 'C';
+  return { value, grade, artifacts:scores, breakdown: [['角色等級',charPts,10], ['武器等級',weaponPts,10], ['聖遺物平均',artifactPts,80]] };
+}
+
+function talentAdvice(type, c) {
+  const priority = String(c && c.天賦優先 || '');
+  if (!priority || /不升|可都不升/.test(priority)) return '依玩法決定';
+  const short = { 普通攻擊:'普攻', 元素戰技:'戰技', 元素爆發:'大招' }[type] || type;
+  const order = priority.split(/[>＞]/).map(x => x.trim());
+  const rank = order.findIndex(x => x.includes(short));
+  if (rank === 0) return '優先升高（建議 Lv.9–10）';
+  if (rank > 0) return '次要升高（建議 Lv.6–9）';
+  return '依玩法決定';
+}
+
+function showcaseCard(a) {
+  const c = findChar(a.avatarId), arts = artifactItems(a), weapon = weaponItem(a), score = buildScore(a, c);
+  const w = weapon && wByName2[String(weapon.itemId)];
+  const wName = w ? w.名稱 : '武器 #' + (weapon ? weapon.itemId : '—');
+  const refine = weapon ? Math.max(1, ...Object.values((weapon.weapon || {}).affixMap || { 0:1 }).map(n)) : 0;
+  const talents = Object.values(a.skillLevelMap || {}).map(n);
+  const labels = (c ? c.天賦.filter(t => ['普通攻擊','元素戰技','元素爆發'].includes(t.類型)).map(t => t.類型) : ['普通攻擊','元素戰技','元素爆發']);
+  const sets = {};
+  arts.forEach(e => { const id = String((e.flat || {}).setId || ''); if (id) sets[id] = (sets[id] || 0) + 1; });
+  const setText = Object.entries(sets).map(([id,count]) => (aById[id] ? aById[id].名稱 : '套裝 #' + id) + count).join('＋') || '—';
+  const stats = statPanel(a, c).map(([k,v]) => '<span>' + k + '<b>' + v + '</b></span>').join('');
+  const artifacts = arts.map((e, i) => {
+    const f = e.flat || {}, r = e.reliquary || {}, slot = SLOT_CN[f.equipType] || '聖遺物';
+    const set = aById[String(f.setId || '')];
+    const grade = score.artifacts[i] || artifactScore(e, c);
+    const subs = grade.subs.map(s => propText(s.appendPropId, s.statValue) + (s.weight ? '（約 ' + fixed(s.rolls, 1) + ' 有效強化）' : '')).join(' · ');
+    const mainNote = grade.slot === '生之花' || grade.slot === '死之羽' ? '固定主詞條' : (grade.mainGood ? '主詞條符合本站建議' : '主詞條與本站建議不符');
+    return '<div class="artifact"><b>' + slot + '　' + html(set ? set.名稱 : '未知套裝') + ' +' + Math.max(0, n(r.level) - 1) + '<span class="ascore">' + grade.value + ' 分</span></b>' +
+      '<small>' + html(propText((f.reliquaryMainstat || {}).mainPropId || '', (f.reliquaryMainstat || {}).statValue || 0)) + '</small>' +
+      '<small>' + html(subs || '無副詞條資料') + '</small><small class="artnote">' + mainNote + '｜有效強化約 ' + fixed(grade.weightedRolls, 1) + ' 次</small></div>';
+  }).join('') || '<div class="artifact"><small>沒有公開聖遺物資料</small></div>';
+  const scoreInfo = score.breakdown.map(x => x[0] + ' ' + Math.round(x[1]) + '/' + x[2]).join('｜');
+  const icon = avatarIcon(c);
+  return '<article class="showchar"><div class="showchar-top">' +
+    (icon ? '<img src="' + icon + '" alt="' + html(c.名稱) + '">' : '<img src="https://enka.network/ui/UI_AvatarIcon_Side_Ambor.png" alt="角色">') +
+    '<div class="showchar-title"><b>' + html(c ? c.名稱 : '角色 #' + a.avatarId) + '</b><small>Lv.' + avLevel(a) + '　C' + (a.talentIdList || []).length + '　好感 ' + n((a.fetterInfo || {}).expLevel) + '</small></div>' +
+    '<div class="score"><b>' + score.value + '</b><small>' + score.grade + ' 練度</small></div></div>' +
+    '<div class="showchar-body"><h3>角色面板</h3><div class="showstats">' + stats + '</div>' +
+    '<h3>武器</h3><div class="buildline">' + html(wName) + '　Lv.' + n((weapon || {}).weapon && weapon.weapon.level) + '　精煉 R' + refine + '</div>' +
+    '<h3>天賦（不計入練度）</h3><div class="buildline">' + talents.map((lv, i) => html(labels[i] || '技能') + ' Lv.' + lv + ' <small>－ ' + talentAdvice(labels[i], c) + '</small>').join('<br>') + '</div>' +
+    '<h3>聖遺物</h3><div class="buildline"><small>套裝：' + html(setText) + '</small></div>' + artifacts +
+    '<div class="score-note">本站練度 ' + score.value + '/100（' + html(scoreInfo) + '）。只計角色等級、武器等級與聖遺物品質；不計命座或天賦。每件聖遺物以主詞條、等級、稀有度及依有效詞條加權的副詞條／推估強化次數計算；並非 YShelper 官方分數。</div>' +
+    (c ? '<button class="btn showopen" data-char="' + c.id + '">查看本站角色攻略</button>' : '') + '</div></article>';
+}
+
+function renderShowcase() {
+  const root = $('showcaseview');
+  const storedProxy = localStorage.getItem('gs-showcase-proxy') || ENKA_PROXY_DEFAULT;
+  const p = showcaseData && showcaseData.playerInfo;
+  const player = p ? '<div class="playerhead"><div><h2>' + html(p.nickname || '旅行者') + '</h2>' +
+    (p.signature ? '<div class="sig">' + html(p.signature) + '</div>' : '') + '</div><div class="playerstats">' +
+    '<span class="pstat">冒險等階<b>AR ' + n(p.level) + '</b></span><span class="pstat">世界等級<b>' + n(p.worldLevel) + '</b></span>' +
+    '<span class="pstat">成就<b>' + n(p.finishAchievementNum) + '</b></span><span class="pstat">深境螺旋<b>' + (p.towerFloorIndex ? p.towerFloorIndex + '-' + p.towerLevelIndex : '—') + '</b></span></div></div>' +
+    '<div class="showgrid" id="showcards">' + ((showcaseData.avatarInfoList || []).map(showcaseCard).join('') || '<div class="empty">此玩家沒有開放展示角色詳情。</div>') + '</div>' : '';
+  root.innerHTML = '<div class="showcase"><div class="showbox"><h2>玩家公開展示</h2><p>輸入 UID 後，讀取玩家在遊戲個人資料中公開的角色展示。僅讀取公開資料，不需要帳號、密碼或 Cookie。</p>' +
+    '<div class="uidrow"><input type="text" inputmode="numeric" maxlength="10" id="showuid" placeholder="輸入 9～10 位數 UID"><button class="btn gold" id="showload">載入展示</button></div>' +
+    '<details class="proxy"><summary>進階：自訂玩家展示資料代理</summary><p>本站已設定共用資料代理，直接輸入 UID 即可。只有想改用自己的 Cloudflare Worker 時，才需要在下方替換網址；此設定只會存在目前瀏覽器。</p><input type="url" id="showproxy" placeholder="https://你的-worker.workers.dev" value="' + html(storedProxy) + '"></details>' +
+    '<div class="showstatus' + (showcaseError ? ' err' : '') + '" id="showstatus">' + html(showcaseError || (p ? '已載入 UID ' + showcaseData.uid + ' 的公開展示。' : '輸入 UID 即可載入公開展示。')) + '</div></div>' + player + '</div>';
+  $('showload').onclick = loadShowcase;
+  $('showuid').onkeydown = e => { if (e.key === 'Enter') loadShowcase(); };
+  $('showproxy').onchange = e => localStorage.setItem('gs-showcase-proxy', e.target.value.trim().replace(/\/$/, ''));
+  root.querySelectorAll('.showopen').forEach(b => b.onclick = () => { stack.length = 0; openBy('char', b.dataset.char); });
+}
+
+async function loadShowcase() {
+  const uid = $('showuid').value.trim(), proxy = $('showproxy').value.trim().replace(/\/$/, '');
+  if (!/^\d{9,10}$/.test(uid)) { showcaseError = '請輸入正確的 9～10 位數原神 UID。'; renderShowcase(); return; }
+  if (!proxy || !/^https:\/\//.test(proxy)) { showcaseError = '請先貼上已部署的玩家展示資料代理網址。'; renderShowcase(); return; }
+  localStorage.setItem('gs-showcase-proxy', proxy);
+  $('showstatus').className = 'showstatus'; $('showstatus').textContent = '正在讀取公開展示…';
+  try {
+    const res = await fetch(proxy + '/api/uid/' + uid, { headers: { Accept:'application/json' } });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data) throw new Error((data && data.error) || ('服務回應 HTTP ' + res.status));
+    showcaseData = data; showcaseError = '';
+  } catch (err) {
+    showcaseData = null;
+    showcaseError = '載入失敗：' + (err.message || '請稍後重試。') + '（確認 UID、公開展示設定與資料代理網址。）';
+  }
+  renderShowcase();
+}
 
 // ══════════════════════════════════════════════════════
 //  培養計算機

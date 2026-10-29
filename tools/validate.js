@@ -62,9 +62,12 @@ for (const c of D) {
   for (const n of c.武器推薦) {
     if (ws.has(n)) bad.push([c.名稱, '武器重複', n]);
     ws.add(n);
-    if (skins.has(n)) { bad.push([c.名稱, '這是武器外觀不是武器', n]); continue; }
+    // 先看是不是真武器：有些外觀與真武器同名（例如星鋒劍），同名時以真武器為準
     const w = wByName[n];
-    if (!w) { bad.push([c.名稱, '武器不存在', n]); continue; }
+    if (!w) {
+      bad.push([c.名稱, skins.has(n) ? '這是武器外觀不是武器' : '武器不存在', n]);
+      continue;
+    }
     if (w.類型 !== c.武器) bad.push([c.名稱, '武器類型不符（角色用' + c.武器 + '）', n + '（' + w.類型 + '）']);
   }
 }
